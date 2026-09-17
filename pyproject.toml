@@ -5,7 +5,10 @@ description = ""
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "flake8>=7.3.0",
     "mazegenerator",
+    "mypy>=2.3.1",
+    "pygame>=2.6.1",
 ]
 
 [tool.uv.sources]
