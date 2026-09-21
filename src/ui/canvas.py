@@ -16,8 +16,13 @@ class Canvas:
                                                                 self.height))
         self._clock = pygame.time.Clock()
 
-    def clear(self, color) -> None:
+    def clear(self, color: Color) -> None:
         self._screen.fill(color)
 
     def present(self) -> None:
         pygame.display.flip()
+
+    def tick(self, fps: int) -> float:
+        res: int = self._clock.tick(fps)
+        res_ms = res / 1000
+        return float(res_ms)
