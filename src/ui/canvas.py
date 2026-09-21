@@ -31,3 +31,6 @@ class Canvas:
                   color: Color, filled: bool = True) -> None:
         filling = 0 if filled else 1
         pygame.draw.rect(self._screen, color, (x, y, w, h), filling)
+
+    def draw_circle(self, cx: int, cy: int, radius: int, color: Color) -> None:
+        pygame.draw.circle(self._screen, color, (cx, cy), radius)
