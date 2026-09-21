@@ -15,6 +15,7 @@ class Canvas:
         self._screen: pygame.Surface = pygame.display.set_mode((self.width,
                                                                 self.height))
         self._clock = pygame.time.Clock()
+        self._fonts: dict[int, pygame.font.Font] = {}
 
     def clear(self, color: Color) -> None:
         self._screen.fill(color)
@@ -38,3 +39,17 @@ class Canvas:
     def draw_line(self, x1: int, y1: int,
                   x2: int, y2: int, color: Color, thickness: int = 1) -> None:
         pygame.draw.line(self._screen, color, (x1, y1), (x2, y2), thickness)
+
+    def draw_text(self, text: str, x: int, y: int, color: Color,
+                  size: int = 24, centered: bool = False) -> None:
+        if size not in self._fonts:
+            font = pygame.font.Font(None, size)
+            self._fonts[size] = font
+        font = self._fonts[size]
+        image = font.render(text, True, color)
+        rect = image.get_rect()
+        if centered:
+            rect.center = (x, y)
+        else:
+            rect.topleft = (x, y)
+        self._screen.blit(image, rect)
