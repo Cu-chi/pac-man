@@ -34,3 +34,7 @@ class Canvas:
 
     def draw_circle(self, cx: int, cy: int, radius: int, color: Color) -> None:
         pygame.draw.circle(self._screen, color, (cx, cy), radius)
+
+    def draw_line(self, x1: int, y1: int,
+                  x2: int, y2: int, color: Color, thickness: int = 1) -> None:
+        pygame.draw.line(self._screen, color, (x1, y1), (x2, y2), thickness)
