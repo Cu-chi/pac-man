@@ -1,5 +1,5 @@
 import pygame
-from ui.events import Key, EventType, Event
+from events import Key, EventType, Event
 
 Color = tuple[int, int, int]
 _KEY_MAP: dict[int, Key] = {
@@ -77,3 +77,6 @@ class Canvas:
                                     key=_KEY_MAP.get(raw_event.key, Key.OTHER),
                                     char=raw_event.unicode))
         return events
+
+    def quit(self) -> None:
+        pygame.quit()
