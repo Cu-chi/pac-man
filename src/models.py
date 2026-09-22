@@ -1,6 +1,9 @@
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from pydantic import BaseModel, Field
+from typing import Any
+from pydantic import BaseModel, Field, field_validator, ValidationInfo, \
+    ValidationError, model_validator
+from pydantic.fields import FieldInfo
 
 
 class LevelConfig(BaseModel):
@@ -20,6 +23,40 @@ class Configuration(BaseModel):
     points_per_ghost: int = Field(default=200, ge=0)
     seed: int | None = 42
     level_max_time: int = Field(default=90, gt=0)
+
+    @model_validator(mode="before")
+    @classmethod
+    def warn_on_missing_fields(cls, data: Any) -> dict:
+        if isinstance(data, dict):
+            for field_name, field_info in cls.model_fields.items():
+                if field_name not in data:
+                    def_val = field_info.get_default(call_default_factory=True)
+                    print(f"Missing key '{field_name}' in JSON. Setting "
+                          f" default value {def_val}")
+        return data
+
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def fallback_to_default_on_error(cls, value: Any, handler,
+                                     info: ValidationInfo) -> Any:
+        try:
+            return handler(value)
+        except ValidationError as exc:
+            field_name = info.field_name
+            field_info: FieldInfo | None = None
+            if field_name is not None:
+                field_info = cls.model_fields.get(field_name)
+
+            # if no default value, raise exception
+            if field_info is None or field_info.is_required():
+                raise exc
+
+            default_val = field_info.get_default(call_default_factory=True)
+
+            print(f"Invalid value for '{field_name}':"
+                  f" {exc.errors()[0]['msg']}, setting default value"
+                  f" '{default_val}'")
+            return default_val
 
 
 class Direction(Enum):
