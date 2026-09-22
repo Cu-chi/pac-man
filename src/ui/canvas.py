@@ -1,6 +1,19 @@
 import pygame
+from ui.events import Key, EventType, Event
 
 Color = tuple[int, int, int]
+_KEY_MAP: dict[int, Key] = {
+    pygame.K_UP: Key.UP,
+    pygame.K_DOWN: Key.DOWN,
+    pygame.K_LEFT: Key.LEFT,
+    pygame.K_RIGHT: Key.RIGHT,
+    pygame.K_RETURN: Key.ENTER,
+    pygame.K_KP_ENTER: Key.ENTER,
+    pygame.K_ESCAPE: Key.ESCAPE,
+    pygame.K_SPACE: Key.SPACE,
+    pygame.K_BACKSPACE: Key.BACKSPACE,
+
+}
 
 
 class Canvas:
@@ -53,3 +66,14 @@ class Canvas:
         else:
             rect.topleft = (x, y)
         self._screen.blit(image, rect)
+
+    def poll_events(self) -> list[Event]:
+        events = []
+        for raw_event in pygame.event.get():
+            if raw_event.type == pygame.QUIT:
+                events.append(Event(type=EventType.QUIT))
+            elif raw_event.type == pygame.KEYDOWN:
+                events.append(Event(type=EventType.KEY_DOWN,
+                                    key=_KEY_MAP.get(raw_event.key, Key.OTHER),
+                                    char=raw_event.unicode))
+        return events
