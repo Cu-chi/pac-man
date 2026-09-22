@@ -1,5 +1,7 @@
 import pygame
 from events import Key, EventType, Event
+from types import TracebackType
+from typing import Self
 
 Color = tuple[int, int, int]
 _KEY_MAP: dict[int, Key] = {
@@ -29,6 +31,13 @@ class Canvas:
                                                                 self.height))
         self._clock = pygame.time.Clock()
         self._fonts: dict[int, pygame.font.Font] = {}
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, exc_type: type[BaseException] | None,
+                 exc: BaseException | None, tb: TracebackType | None) -> None:
+        self.close()
 
     def clear(self, color: Color) -> None:
         self._screen.fill(color)
@@ -78,5 +87,5 @@ class Canvas:
                                     char=raw_event.unicode))
         return events
 
-    def quit(self) -> None:
+    def close(self) -> None:
         pygame.quit()
