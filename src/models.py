@@ -21,7 +21,7 @@ class Configuration(BaseModel):
     points_per_pacgum: int = Field(default=10, ge=0)
     points_per_super_pacgum: int = Field(default=50, ge=0)
     points_per_ghost: int = Field(default=200, ge=0)
-    seed: int | None = 42
+    seed: int = Field(default=42)
     level_max_time: int = Field(default=90, gt=0)
 
     @model_validator(mode="before")
