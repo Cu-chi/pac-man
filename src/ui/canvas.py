@@ -19,9 +19,20 @@ _KEY_MAP: dict[int, Key] = {
 
 
 class Canvas:
+    """Thin wrapper around pygame, the only module allowed to use it.
+
+    Exposes MLX-style drawing and event primitives so the rest of the
+    game never imports pygame directly.
+    """
 
     def __init__(self, width: int, height: int, title: str) -> None:
+        """Open the game window.
 
+        Args:
+            width: Window width, in pixels.
+            height: Window height, in pixels.
+            title: Text shown in the window's title bar.
+        """
         self.width: int = width
         self.height: int = height
 
@@ -33,37 +44,102 @@ class Canvas:
         self._fonts: dict[int, pygame.font.Font] = {}
 
     def __enter__(self) -> Self:
+        """Return the canvas itself for use in a `with` block.
+
+        Returns:
+            This canvas.
+        """
         return self
 
     def __exit__(self, exc_type: type[BaseException] | None,
                  exc: BaseException | None, tb: TracebackType | None) -> None:
+        """Close the window when leaving the `with` block.
+
+        Args:
+            exc_type: Type of the exception raised in the block, if any.
+            exc: The exception instance raised in the block, if any.
+            tb: Traceback of that exception, if any.
+        """
         self.close()
 
     def clear(self, color: Color) -> None:
+        """Fill the whole window with one flat color.
+
+        Args:
+            color: RGB color used to erase the previous frame.
+        """
         self._screen.fill(color)
 
     def present(self) -> None:
+        """Show everything drawn since the last `clear` call."""
         pygame.display.flip()
 
     def tick(self, fps: int) -> float:
+        """Cap the frame rate and report the time spent on the last frame.
+
+        Args:
+            fps: Maximum number of frames per second.
+
+        Returns:
+            Elapsed time since the previous call, in seconds.
+        """
         res = self._clock.tick(fps)
         res_ms = res / 1000
         return float(res_ms)
 
     def draw_rect(self, x: int, y: int, w: int, h: int,
                   color: Color, filled: bool = True) -> None:
+        """Draw a rectangle, filled or as an outline.
+
+        Args:
+            x: X coordinate of the top-left corner, in pixels.
+            y: Y coordinate of the top-left corner, in pixels.
+            w: Rectangle width, in pixels.
+            h: Rectangle height, in pixels.
+            color: RGB color of the rectangle.
+            filled: Draw a filled rectangle when True, an outline otherwise.
+        """
         filling = 0 if filled else 1
         pygame.draw.rect(self._screen, color, (x, y, w, h), filling)
 
     def draw_circle(self, cx: int, cy: int, radius: int, color: Color) -> None:
+        """Draw a filled circle.
+
+        Args:
+            cx: X coordinate of the circle's center, in pixels.
+            cy: Y coordinate of the circle's center, in pixels.
+            radius: Circle radius, in pixels.
+            color: RGB color of the circle.
+        """
         pygame.draw.circle(self._screen, color, (cx, cy), radius)
 
     def draw_line(self, x1: int, y1: int,
                   x2: int, y2: int, color: Color, thickness: int = 1) -> None:
+        """Draw a straight line between two points.
+
+        Args:
+            x1: X coordinate of the start point, in pixels.
+            y1: Y coordinate of the start point, in pixels.
+            x2: X coordinate of the end point, in pixels.
+            y2: Y coordinate of the end point, in pixels.
+            color: RGB color of the line.
+            thickness: Line thickness, in pixels.
+        """
         pygame.draw.line(self._screen, color, (x1, y1), (x2, y2), thickness)
 
     def draw_text(self, text: str, x: int, y: int, color: Color,
                   size: int = 24, centered: bool = False) -> None:
+        """Draw text on the window, caching the font used for each size.
+
+        Args:
+            text: Text to draw.
+            x: X coordinate, in pixels; the text center when `centered`.
+            y: Y coordinate, in pixels; the text center when `centered`.
+            color: RGB color of the text.
+            size: Font size, in points.
+            centered: Center the text on (x, y) instead of using it as the
+                top-left corner.
+        """
         if size not in self._fonts:
             font = pygame.font.Font(None, size)
             self._fonts[size] = font
@@ -77,6 +153,11 @@ class Canvas:
         self._screen.blit(image, rect)
 
     def poll_events(self) -> list[Event]:
+        """Drain pygame's event queue and translate it to `Event` values.
+
+        Returns:
+            The window and keyboard events received since the last call.
+        """
         events = []
         for raw_event in pygame.event.get():
             if raw_event.type == pygame.QUIT:
@@ -88,4 +169,5 @@ class Canvas:
         return events
 
     def close(self) -> None:
+        """Close the window and release pygame's resources."""
         pygame.quit()

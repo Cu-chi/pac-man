@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 
 class Key(Enum):
+    """Keyboard keys the game reacts to, independent from pygame's codes."""
 
     UP = auto()
     DOWN = auto()
@@ -16,6 +17,7 @@ class Key(Enum):
 
 
 class EventType(Enum):
+    """Kinds of events `Canvas.poll_events` can report."""
 
     QUIT = auto()
     KEY_DOWN = auto()
@@ -23,6 +25,13 @@ class EventType(Enum):
 
 @dataclass(slots=True, kw_only=True)
 class Event():
+    """A single window or keyboard event, independent from pygame.
+
+    Attributes:
+        type: Kind of event (window closed, key pressed...).
+        key: Key that was pressed, or `Key.OTHER` for an unmapped one.
+        char: Character actually typed, e.g. for letters or name entry.
+    """
 
     type: EventType
     key: Key = Key.OTHER
