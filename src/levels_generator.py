@@ -1,5 +1,6 @@
 from mazegenerator import MazeGenerator
 from models import Configuration, Level
+import random
 
 
 class SpawnNotFoundException(Exception):
@@ -23,15 +24,28 @@ class LevelsGenerator:
                 size=(level.width, level.height),
                 seed=config.seed if i == 0 else 0
             )
+            player_spawn = self.find_player_spawn(level.width, level.height,
+                                                  maze.maze)
+            pacgums = self.create_pacgums(level.width, level.height,
+                                          maze.maze, player_spawn)
             self.levels.append(Level(
                 width=level.width,
                 height=level.height,
                 walls=maze.maze,
-                pacgums=set(),
-                super_pacgums=set(),
-                ghost_spawns=[],
-                player_spawn=self.find_player_spawn(level.width,
-                                                    level.height, maze.maze),
+                pacgums=pacgums,
+                super_pacgums={
+                    (0, 0),
+                    (level.width - 1, 0),
+                    (level.width - 1, level.height - 1),
+                    (0, level.height - 1),
+                },
+                ghost_spawns=[
+                    (0, 0),
+                    (level.width - 1, 0),
+                    (level.width - 1, level.height - 1),
+                    (0, level.height - 1),
+                ],
+                player_spawn=player_spawn,
             ))
 
     @staticmethod
@@ -65,3 +79,27 @@ class LevelsGenerator:
                     return (x, y)
 
         raise SpawnNotFoundException()
+
+    @staticmethod
+    def create_pacgums(width: int, height: int,
+                       maze: list[list[int]],
+                       player_spawn: tuple[int, int]) -> set[tuple[int, int]]:
+        """Create pacgums randomly on available cells.
+
+        Args:
+            width (int): Width of the maze
+            height (int): Height of the maze
+            maze (list[list[int]]): Maze
+            player_spawn (tuple[int, int]): Player spawn
+
+        Returns:
+            set[tuple[int, int]]: set of pacgums positions
+        """
+        pacgums: set[tuple[int, int]] = set()
+        for y in range(height):
+            for x in range(width):
+                if maze[y][x] != 15 and (x, y) != player_spawn:
+                    # 90% chance that a pacgum spawns on the cell
+                    if random.random() >= 0.1:
+                        pacgums.add((x, y))
+        return pacgums
