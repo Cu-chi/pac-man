@@ -89,7 +89,7 @@ class Canvas:
 
     def draw_rect(self, x: int, y: int, w: int, h: int,
                   color: Color, filled: bool = True) -> None:
-        """Draw a rectangle, filled or as an outline.
+        """Draw a rectangle, pixel by pixel, filled or as an outline.
 
         Args:
             x: X coordinate of the top-left corner, in pixels.
@@ -99,33 +99,24 @@ class Canvas:
             color: RGB color of the rectangle.
             filled: Draw a filled rectangle when True, an outline otherwise.
         """
-        filling = 0 if filled else 1
-        pygame.draw.rect(self._screen, color, (x, y, w, h), filling)
-
-    def draw_circle(self, cx: int, cy: int, radius: int, color: Color) -> None:
-        """Draw a filled circle.
-
-        Args:
-            cx: X coordinate of the circle's center, in pixels.
-            cy: Y coordinate of the circle's center, in pixels.
-            radius: Circle radius, in pixels.
-            color: RGB color of the circle.
-        """
-        pygame.draw.circle(self._screen, color, (cx, cy), radius)
-
-    def draw_line(self, x1: int, y1: int,
-                  x2: int, y2: int, color: Color, thickness: int = 1) -> None:
-        """Draw a straight line between two points.
-
-        Args:
-            x1: X coordinate of the start point, in pixels.
-            y1: Y coordinate of the start point, in pixels.
-            x2: X coordinate of the end point, in pixels.
-            y2: Y coordinate of the end point, in pixels.
-            color: RGB color of the line.
-            thickness: Line thickness, in pixels.
-        """
-        pygame.draw.line(self._screen, color, (x1, y1), (x2, y2), thickness)
+        if filled:
+            for px in range(x, x + w):
+                for py in range(y, y + h):
+                    if 0 <= px < self.width and 0 <= py < self.height:
+                        self._screen.set_at((px, py), color)
+        else:
+            for px in range(x, x + w):
+                if 0 <= px < self.width:
+                    if 0 <= y < self.height:
+                        self._screen.set_at((px, y), color)
+                    if 0 <= y + h - 1 < self.height:
+                        self._screen.set_at((px, y + h - 1), color)
+            for py in range(y, y + h):
+                if 0 <= py < self.height:
+                    if 0 <= x < self.width:
+                        self._screen.set_at((x, py), color)
+                    if 0 <= x + w - 1 < self.width:
+                        self._screen.set_at((x + w - 1, py), color)
 
     def draw_text(self, text: str, x: int, y: int, color: Color,
                   size: int = 24, centered: bool = False) -> None:
