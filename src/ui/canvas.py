@@ -2,7 +2,7 @@ import pygame
 import time
 from events import Key, EventType, Event
 from types import TracebackType
-from typing import Self
+from typing import Self, Callable
 
 Color = tuple[int, int, int]
 _KEY_MAP: dict[int, Key] = {
@@ -42,9 +42,13 @@ class Canvas:
         pygame.display.set_caption(title)
         self._screen: pygame.Surface = pygame.display.set_mode((self.width,
                                                                 self.height))
-        self._buffer: pygame.Surface = pygame.Surface((self.width, self.height))
+        self._buffer: pygame.Surface = pygame.Surface((self.width,
+                                                       self.height))
         self._last_tick = time.time()
         self._fonts: dict[int, pygame.font.Font] = {}
+        self._key_hook: Callable[[Event], None] | None = None
+        self._loop_hook: Callable[[], None] | None = None
+        self._running: bool = False
 
     def __enter__(self) -> Self:
         """Return the canvas itself for use in a `with` block.
@@ -66,11 +70,15 @@ class Canvas:
         self.close()
 
     def clear(self) -> None:
-        """Fill the off-screen buffer with black, erasing the previous frame."""
+        """
+        Fill the off-screen buffer with black, erasing the previous frame.
+        """
         self._buffer.fill((0, 0, 0))
 
     def present(self) -> None:
-        """Copy the off-screen buffer onto the window and refresh the display."""
+        """
+        Copy the off-screen buffer onto the window and refresh the display.
+        """
         self._screen.blit(self._buffer, (0, 0))
         pygame.display.update()
 
@@ -127,7 +135,8 @@ class Canvas:
 
     def draw_text(self, text: str, x: int, y: int, color: Color,
                   size: int = 24, centered: bool = False) -> None:
-        """Draw text into the off-screen buffer, caching the font used for each size.
+        """Draw text into the off-screen buffer, caching the font used for
+        each size.
 
         Args:
             text: Text to draw.
@@ -150,21 +159,51 @@ class Canvas:
             rect.topleft = (x, y)
         self._buffer.blit(image, rect)
 
-    def poll_events(self) -> list[Event]:
-        """Drain pygame's event queue and translate it to `Event` values.
+    def key_hook(self, func: Callable[[Event], None]) -> None:
+        """Register the callback called on every key press.
 
-        Returns:
-            The window and keyboard events received since the last call.
+        Replaces any previously registered key callback.
+
+        Args:
+            func: Called with the `Event` describing the key pressed.
         """
-        events = []
-        for raw_event in pygame.event.get():
-            if raw_event.type == pygame.QUIT:
-                events.append(Event(type=EventType.QUIT))
-            elif raw_event.type == pygame.KEYDOWN:
-                events.append(Event(type=EventType.KEY_DOWN,
-                                    key=_KEY_MAP.get(raw_event.key, Key.OTHER),
-                                    char=raw_event.unicode))
-        return events
+        self._key_hook = func
+
+    def loop_hook(self, func: Callable[[], None]) -> None:
+        """Register the callback called once per turn of `loop`.
+
+        Replaces any previously registered loop callback. Called with no
+        argument, once the pending events for that turn have been handled.
+
+        Args:
+            func: Called once per turn of the main loop.
+        """
+        self._loop_hook = func
+
+    def loop_exit(self) -> None:
+        """Stop `loop` after its current turn completes."""
+        self._running = False
+
+    def loop(self) -> None:
+        """Run the main loop until `loop_exit` is called.
+
+        Each turn drains pending window and keyboard events, dispatching
+        them to the registered `key_hook`, then calls the registered
+        `loop_hook`. Blocks until `loop_exit` is called.
+        """
+        self._running = True
+        while self._running:
+            for raw_event in pygame.event.get():
+                if raw_event.type == pygame.QUIT:
+                    self.loop_exit()
+                elif raw_event.type == pygame.KEYDOWN:
+                    event = Event(type=EventType.KEY_DOWN,
+                                  key=_KEY_MAP.get(raw_event.key, Key.OTHER),
+                                  char=raw_event.unicode)
+                    if self._key_hook is not None:
+                        self._key_hook(event)
+            if self._loop_hook is not None:
+                self._loop_hook()
 
     def close(self) -> None:
         """Close the window and release pygame's resources."""
