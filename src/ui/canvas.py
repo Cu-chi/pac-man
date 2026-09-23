@@ -23,7 +23,8 @@ class Canvas:
     """Thin wrapper around pygame, the only module allowed to use it.
 
     Exposes MLX-style drawing and event primitives so the rest of the
-    game never imports pygame directly.
+    game never imports pygame directly. Drawing happens on an off-screen
+    buffer, only made visible on the window once `present` is called.
     """
 
     def __init__(self, width: int, height: int, title: str) -> None:
@@ -41,6 +42,7 @@ class Canvas:
         pygame.display.set_caption(title)
         self._screen: pygame.Surface = pygame.display.set_mode((self.width,
                                                                 self.height))
+        self._buffer: pygame.Surface = pygame.Surface((self.width, self.height))
         self._last_tick = time.time()
         self._fonts: dict[int, pygame.font.Font] = {}
 
@@ -63,17 +65,14 @@ class Canvas:
         """
         self.close()
 
-    def clear(self, color: Color) -> None:
-        """Fill the whole window with one flat color.
-
-        Args:
-            color: RGB color used to erase the previous frame.
-        """
-        self._screen.fill(color)
+    def clear(self) -> None:
+        """Fill the off-screen buffer with black, erasing the previous frame."""
+        self._buffer.fill((0, 0, 0))
 
     def present(self) -> None:
-        """Show everything drawn since the last `clear` call."""
-        pygame.display.flip()
+        """Copy the off-screen buffer onto the window and refresh the display."""
+        self._screen.blit(self._buffer, (0, 0))
+        pygame.display.update()
 
     def tick(self, fps: int) -> float:
         """Cap the frame rate and report the time spent on the last frame.
@@ -95,7 +94,9 @@ class Canvas:
 
     def draw_rect(self, x: int, y: int, w: int, h: int,
                   color: Color, filled: bool = True) -> None:
-        """Draw a rectangle, pixel by pixel, filled or as an outline.
+        """Draw a rectangle, pixel by pixel, into the off-screen buffer.
+
+        Filled or as an outline.
 
         Args:
             x: X coordinate of the top-left corner, in pixels.
@@ -109,24 +110,24 @@ class Canvas:
             for px in range(x, x + w):
                 for py in range(y, y + h):
                     if 0 <= px < self.width and 0 <= py < self.height:
-                        self._screen.set_at((px, py), color)
+                        self._buffer.set_at((px, py), color)
         else:
             for px in range(x, x + w):
                 if 0 <= px < self.width:
                     if 0 <= y < self.height:
-                        self._screen.set_at((px, y), color)
+                        self._buffer.set_at((px, y), color)
                     if 0 <= y + h - 1 < self.height:
-                        self._screen.set_at((px, y + h - 1), color)
+                        self._buffer.set_at((px, y + h - 1), color)
             for py in range(y, y + h):
                 if 0 <= py < self.height:
                     if 0 <= x < self.width:
-                        self._screen.set_at((x, py), color)
+                        self._buffer.set_at((x, py), color)
                     if 0 <= x + w - 1 < self.width:
-                        self._screen.set_at((x + w - 1, py), color)
+                        self._buffer.set_at((x + w - 1, py), color)
 
     def draw_text(self, text: str, x: int, y: int, color: Color,
                   size: int = 24, centered: bool = False) -> None:
-        """Draw text on the window, caching the font used for each size.
+        """Draw text into the off-screen buffer, caching the font used for each size.
 
         Args:
             text: Text to draw.
@@ -147,7 +148,7 @@ class Canvas:
             rect.center = (x, y)
         else:
             rect.topleft = (x, y)
-        self._screen.blit(image, rect)
+        self._buffer.blit(image, rect)
 
     def poll_events(self) -> list[Event]:
         """Drain pygame's event queue and translate it to `Event` values.
