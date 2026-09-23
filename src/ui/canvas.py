@@ -1,7 +1,8 @@
 import pygame
+import time
 from events import Key, EventType, Event
 from types import TracebackType
-from typing import Self
+from typing import Self, Callable
 
 Color = tuple[int, int, int]
 _KEY_MAP: dict[int, Key] = {
@@ -22,7 +23,8 @@ class Canvas:
     """Thin wrapper around pygame, the only module allowed to use it.
 
     Exposes MLX-style drawing and event primitives so the rest of the
-    game never imports pygame directly.
+    game never imports pygame directly. Drawing happens on an off-screen
+    buffer, only made visible on the window once `present` is called.
     """
 
     def __init__(self, width: int, height: int, title: str) -> None:
@@ -40,8 +42,13 @@ class Canvas:
         pygame.display.set_caption(title)
         self._screen: pygame.Surface = pygame.display.set_mode((self.width,
                                                                 self.height))
-        self._clock = pygame.time.Clock()
+        self._buffer: pygame.Surface = pygame.Surface((self.width,
+                                                       self.height))
+        self._last_tick = time.time()
         self._fonts: dict[int, pygame.font.Font] = {}
+        self._key_hook: Callable[[Event], None] | None = None
+        self._loop_hook: Callable[[], None] | None = None
+        self._running: bool = False
 
     def __enter__(self) -> Self:
         """Return the canvas itself for use in a `with` block.
@@ -62,17 +69,18 @@ class Canvas:
         """
         self.close()
 
-    def clear(self, color: Color) -> None:
-        """Fill the whole window with one flat color.
-
-        Args:
-            color: RGB color used to erase the previous frame.
+    def clear(self) -> None:
         """
-        self._screen.fill(color)
+        Fill the off-screen buffer with black, erasing the previous frame.
+        """
+        self._buffer.fill((0, 0, 0))
 
     def present(self) -> None:
-        """Show everything drawn since the last `clear` call."""
-        pygame.display.flip()
+        """
+        Copy the off-screen buffer onto the window and refresh the display.
+        """
+        self._screen.blit(self._buffer, (0, 0))
+        pygame.display.update()
 
     def tick(self, fps: int) -> float:
         """Cap the frame rate and report the time spent on the last frame.
@@ -83,13 +91,20 @@ class Canvas:
         Returns:
             Elapsed time since the previous call, in seconds.
         """
-        res = self._clock.tick(fps)
-        res_ms = res / 1000
-        return float(res_ms)
+        previous_tick = self._last_tick
+        current_time = time.time()
+        res = current_time - previous_tick
+        if res < 1 / fps:
+            remaining = (1 / fps) - res
+            time.sleep(remaining)
+        self._last_tick = time.time()
+        return self._last_tick - previous_tick
 
     def draw_rect(self, x: int, y: int, w: int, h: int,
                   color: Color, filled: bool = True) -> None:
-        """Draw a rectangle, filled or as an outline.
+        """Draw a rectangle, pixel by pixel, into the off-screen buffer.
+
+        Filled or as an outline.
 
         Args:
             x: X coordinate of the top-left corner, in pixels.
@@ -99,37 +114,29 @@ class Canvas:
             color: RGB color of the rectangle.
             filled: Draw a filled rectangle when True, an outline otherwise.
         """
-        filling = 0 if filled else 1
-        pygame.draw.rect(self._screen, color, (x, y, w, h), filling)
-
-    def draw_circle(self, cx: int, cy: int, radius: int, color: Color) -> None:
-        """Draw a filled circle.
-
-        Args:
-            cx: X coordinate of the circle's center, in pixels.
-            cy: Y coordinate of the circle's center, in pixels.
-            radius: Circle radius, in pixels.
-            color: RGB color of the circle.
-        """
-        pygame.draw.circle(self._screen, color, (cx, cy), radius)
-
-    def draw_line(self, x1: int, y1: int,
-                  x2: int, y2: int, color: Color, thickness: int = 1) -> None:
-        """Draw a straight line between two points.
-
-        Args:
-            x1: X coordinate of the start point, in pixels.
-            y1: Y coordinate of the start point, in pixels.
-            x2: X coordinate of the end point, in pixels.
-            y2: Y coordinate of the end point, in pixels.
-            color: RGB color of the line.
-            thickness: Line thickness, in pixels.
-        """
-        pygame.draw.line(self._screen, color, (x1, y1), (x2, y2), thickness)
+        if filled:
+            for px in range(x, x + w):
+                for py in range(y, y + h):
+                    if 0 <= px < self.width and 0 <= py < self.height:
+                        self._buffer.set_at((px, py), color)
+        else:
+            for px in range(x, x + w):
+                if 0 <= px < self.width:
+                    if 0 <= y < self.height:
+                        self._buffer.set_at((px, y), color)
+                    if 0 <= y + h - 1 < self.height:
+                        self._buffer.set_at((px, y + h - 1), color)
+            for py in range(y, y + h):
+                if 0 <= py < self.height:
+                    if 0 <= x < self.width:
+                        self._buffer.set_at((x, py), color)
+                    if 0 <= x + w - 1 < self.width:
+                        self._buffer.set_at((x + w - 1, py), color)
 
     def draw_text(self, text: str, x: int, y: int, color: Color,
                   size: int = 24, centered: bool = False) -> None:
-        """Draw text on the window, caching the font used for each size.
+        """Draw text into the off-screen buffer, caching the font used for
+        each size.
 
         Args:
             text: Text to draw.
@@ -150,23 +157,53 @@ class Canvas:
             rect.center = (x, y)
         else:
             rect.topleft = (x, y)
-        self._screen.blit(image, rect)
+        self._buffer.blit(image, rect)
 
-    def poll_events(self) -> list[Event]:
-        """Drain pygame's event queue and translate it to `Event` values.
+    def key_hook(self, func: Callable[[Event], None]) -> None:
+        """Register the callback called on every key press.
 
-        Returns:
-            The window and keyboard events received since the last call.
+        Replaces any previously registered key callback.
+
+        Args:
+            func: Called with the `Event` describing the key pressed.
         """
-        events = []
-        for raw_event in pygame.event.get():
-            if raw_event.type == pygame.QUIT:
-                events.append(Event(type=EventType.QUIT))
-            elif raw_event.type == pygame.KEYDOWN:
-                events.append(Event(type=EventType.KEY_DOWN,
-                                    key=_KEY_MAP.get(raw_event.key, Key.OTHER),
-                                    char=raw_event.unicode))
-        return events
+        self._key_hook = func
+
+    def loop_hook(self, func: Callable[[], None]) -> None:
+        """Register the callback called once per turn of `loop`.
+
+        Replaces any previously registered loop callback. Called with no
+        argument, once the pending events for that turn have been handled.
+
+        Args:
+            func: Called once per turn of the main loop.
+        """
+        self._loop_hook = func
+
+    def loop_exit(self) -> None:
+        """Stop `loop` after its current turn completes."""
+        self._running = False
+
+    def loop(self) -> None:
+        """Run the main loop until `loop_exit` is called.
+
+        Each turn drains pending window and keyboard events, dispatching
+        them to the registered `key_hook`, then calls the registered
+        `loop_hook`. Blocks until `loop_exit` is called.
+        """
+        self._running = True
+        while self._running:
+            for raw_event in pygame.event.get():
+                if raw_event.type == pygame.QUIT:
+                    self.loop_exit()
+                elif raw_event.type == pygame.KEYDOWN:
+                    event = Event(type=EventType.KEY_DOWN,
+                                  key=_KEY_MAP.get(raw_event.key, Key.OTHER),
+                                  char=raw_event.unicode)
+                    if self._key_hook is not None:
+                        self._key_hook(event)
+            if self._loop_hook is not None:
+                self._loop_hook()
 
     def close(self) -> None:
         """Close the window and release pygame's resources."""
