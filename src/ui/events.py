@@ -17,9 +17,8 @@ class Key(Enum):
 
 
 class EventType(Enum):
-    """Kinds of events `Canvas.poll_events` can report."""
+    """Kinds of events `Canvas.key_hook` can report."""
 
-    QUIT = auto()
     KEY_DOWN = auto()
 
 
