@@ -2,6 +2,10 @@ from mazegenerator import MazeGenerator
 from models import Configuration, Level
 
 
+class SpawnNotFoundException(Exception):
+    pass
+
+
 class LevelsGenerator:
     """Class used to generate levels."""
 
@@ -60,4 +64,4 @@ class LevelsGenerator:
                 if maze[y][x] != 15:
                     return (x, y)
 
-        return (center_x, center_y)
+        raise SpawnNotFoundException()
