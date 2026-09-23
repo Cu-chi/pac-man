@@ -1,4 +1,5 @@
 import pygame
+import time
 from events import Key, EventType, Event
 from types import TracebackType
 from typing import Self
@@ -40,7 +41,7 @@ class Canvas:
         pygame.display.set_caption(title)
         self._screen: pygame.Surface = pygame.display.set_mode((self.width,
                                                                 self.height))
-        self._clock = pygame.time.Clock()
+        self._last_tick = time.time()
         self._fonts: dict[int, pygame.font.Font] = {}
 
     def __enter__(self) -> Self:
@@ -83,9 +84,14 @@ class Canvas:
         Returns:
             Elapsed time since the previous call, in seconds.
         """
-        res = self._clock.tick(fps)
-        res_ms = res / 1000
-        return float(res_ms)
+        previous_tick = self._last_tick
+        current_time = time.time()
+        res = current_time - previous_tick
+        if res < 1 / fps:
+            remaining = (1 / fps) - res
+            time.sleep(remaining)
+        self._last_tick = time.time()
+        return self._last_tick - previous_tick
 
     def draw_rect(self, x: int, y: int, w: int, h: int,
                   color: Color, filled: bool = True) -> None:
