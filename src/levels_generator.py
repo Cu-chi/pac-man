@@ -3,7 +3,16 @@ from models import Configuration, Level
 
 
 class LevelsGenerator:
+    """Class used to generate levels."""
+
     def __init__(self, config: Configuration) -> None:
+        """Initialize a LevelsGenerator object that contains all levels.
+
+        Each level has its data using the Level model.
+
+        Args:
+            config (Configuration): The configuration
+        """
         self.levels: list[Level] = []
         for i, level in enumerate(config.levels):
             maze = MazeGenerator(
