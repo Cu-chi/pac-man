@@ -88,7 +88,7 @@ class Entity():
 
 
 @dataclass(slots=True, kw_only=True)
-class Player(Entity):
+class PlayerData(Entity):
 
     lives: int
     score: int
@@ -103,7 +103,7 @@ class GhostState(Enum):
 
 
 @dataclass(slots=True, kw_only=True)
-class Ghost(Entity):
+class GhostData(Entity):
 
     state: GhostState
     color: str
@@ -132,8 +132,8 @@ class GameEvent(Enum):
 @dataclass(slots=True, kw_only=True)
 class GameState():
 
-    player: Player
-    ghosts: list[Ghost]
+    player: PlayerData
+    ghosts: list[GhostData]
     level: Level
     level_index: int
     total_levels: int
