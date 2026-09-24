@@ -82,8 +82,7 @@ class Level():
 @dataclass(slots=True, kw_only=True)
 class Entity():
 
-    x: int
-    y: int
+    position: tuple[int, int]
     direction: Direction
 
 
