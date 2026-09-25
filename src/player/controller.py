@@ -1,4 +1,4 @@
-from models import PlayerData, Level, Direction
+from models import PlayerData, Level, Direction, Configuration
 from ui.events import Event, EventType, Key
 
 
@@ -6,9 +6,10 @@ class PlayerController:
     """Controls the player movement and input processing."""
 
     def __init__(self, player_data: PlayerData, level: Level,
-                 speed: float = 5.0) -> None:
+                 config: Configuration, speed: float = 5.0) -> None:
         self._player_data: PlayerData = player_data
         self._level: Level = level
+        self._config: Configuration = config
         self._speed: float = speed  # cells/s
         self._move_accumulator: float = 0.0
 
@@ -64,6 +65,10 @@ class PlayerController:
             dx, dy, _ = self._player_data.direction.value
             cx, cy = self._player_data.position
             self._player_data.position = (cx + dx, cy + dy)
+
+            if self._player_data.position in self._level.pacgums:
+                self._level.pacgums.remove(self._player_data.position)
+                self._player_data.score += self._config.points_per_pacgum
 
     def _can_move(self, direction: Direction) -> bool:
         """Check if moving in the given direction hits a wall."""
