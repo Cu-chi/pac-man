@@ -29,6 +29,16 @@ class PlayerController:
                 case Key.RIGHT:
                     self._player_data.next_direction = Direction.RIGHT
 
+            match event.char.lower():
+                case "w" | "z":
+                    self._player_data.next_direction = Direction.UP
+                case "s":
+                    self._player_data.next_direction = Direction.DOWN
+                case "a" | "q":
+                    self._player_data.next_direction = Direction.LEFT
+                case "d":
+                    self._player_data.next_direction = Direction.RIGHT
+
     def update(self, dt: float) -> None:
         """Update player position based on elapsed time.
 
