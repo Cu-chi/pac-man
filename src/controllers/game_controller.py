@@ -1,5 +1,5 @@
 from models import GameState, GamePhase, GhostState, Direction
-from player.controller import PlayerController
+from controllers.player_controller import PlayerController
 from ui.events import Event, EventType
 from configuration import Configuration
 # from ghost.controller import GhostController
