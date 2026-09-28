@@ -187,6 +187,13 @@ class Canvas:
         return self._images[key]
 
     def draw_image(self, image: pygame.Surface, x: int, y: int) -> None:
+        """Draw an image into the off-screen buffer.
+
+        Args:
+            image: Image to draw, as returned by `load_image`.
+            x: X coordinate of the image's top-left corner, in pixels.
+            y: Y coordinate of the image's top-left corner, in pixels.
+        """
         self._buffer.blit(image, (x, y))
 
     def key_hook(self, func: Callable[[Event], None]) -> None:
