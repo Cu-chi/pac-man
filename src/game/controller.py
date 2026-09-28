@@ -11,10 +11,7 @@ class GameController:
     def __init__(
         self,
         state: GameState,
-        config: Configuration,
-        points_per_pacgum: int = 10,
-        points_per_super: int = 50,
-        points_per_ghost: int = 200,
+        config: Configuration
     ) -> None:
         self._state: GameState = state
         self._player_ctrl = PlayerController(state.player, state.level)
@@ -22,8 +19,6 @@ class GameController:
             # GhostController(ghost, state.level) for ghost in state.ghosts
         ]
         self._config = config
-        self._pts_super = points_per_super
-        self._pts_ghost = points_per_ghost
 
     def update(self, dt: float) -> None:
         """Run one logic frame."""
