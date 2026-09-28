@@ -1,4 +1,4 @@
-from models import Level, Direction
+from models import Level, Direction, Player
 from canvas import Canvas, Color
 
 WALL_THICKNESS = 2
@@ -61,3 +61,26 @@ def draw_pacgum(canvas: Canvas, level: Level, tile_size: int) -> None:
         canvas.draw_rect(center_x - supergum_size // 2,
                          center_y - supergum_size // 2,
                          supergum_size, supergum_size, supergum_color)
+
+
+def draw_player(canvas: Canvas, player: Player, tile_size: int) -> None:
+    """
+    Draw the player on the canvas.
+
+    The sprite matches the player's direction. Its mouth alternates between
+    open and closed on the parity of x + y, so it swaps at every move.
+
+    Args:
+        canvas: Canvas to draw on.
+        player: Player providing the position and direction.
+        tile_size: Size of one tile, in pixels.
+    """
+    state = "open" if (player.x + player.y) % 2 == 0 else "closed"
+    path = (f"src/ui/assets/pacman_{state}"
+            f"_{player.direction.name.lower()}.png")
+    canvas.draw_image(canvas.load_image(path, tile_size),
+                      player.x * tile_size, player.y * tile_size)
+
+
+def draw_ghost(canvas: Canvas, level: Level, tile_size: int) -> None:
+    pass
