@@ -49,6 +49,7 @@ class Canvas:
         self._key_hook: Callable[[Event], None] | None = None
         self._loop_hook: Callable[[], None] | None = None
         self._running: bool = False
+        self._images: dict[tuple[str, int], pygame.Surface] = {}
 
     def __enter__(self) -> Self:
         """Return the canvas itself for use in a `with` block.
@@ -158,6 +159,35 @@ class Canvas:
         else:
             rect.topleft = (x, y)
         self._buffer.blit(image, rect)
+
+    def load_image(self, path: str, size: int) -> pygame.Surface:
+        """
+        Load a PNG scaled to size x size, caching the result.
+
+        The image is resized with nearest-neighbour sampling, copying pixels
+        one by one, and only computed once per (path, size) pair.
+
+        Args:
+            path: Path to the PNG file, relative to the working directory.
+            size: Width and height of the scaled image, in pixels.
+
+        Returns:
+            The scaled image, with its transparency preserved.
+        """
+        key = (path, size)
+        if key not in self._images:
+            source = pygame.image.load(path)
+            w, h = source.get_size()
+            scaled = pygame.Surface((size, size), pygame.SRCALPHA)
+            for y in range(size):
+                for x in range(size):
+                    scaled.set_at((x, y), source.get_at((x * w // size,
+                                                         y * h // size)))
+            self._images[key] = scaled
+        return self._images[key]
+
+    def draw_image(self, image: pygame.Surface, x: int, y: int) -> None:
+        self._buffer.blit(image, (x, y))
 
     def key_hook(self, func: Callable[[Event], None]) -> None:
         """Register the callback called on every key press.
