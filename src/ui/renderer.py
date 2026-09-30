@@ -1,4 +1,4 @@
-from models import Level, Direction, Player
+from models import Level, Direction, Player, Ghost, GhostState
 from canvas import Canvas, Color
 
 WALL_THICKNESS = 2
@@ -82,5 +82,27 @@ def draw_player(canvas: Canvas, player: Player, tile_size: int) -> None:
                       player.x * tile_size, player.y * tile_size)
 
 
-def draw_ghost(canvas: Canvas, level: Level, tile_size: int) -> None:
-    pass
+def draw_ghosts(canvas: Canvas, ghosts: list[Ghost], tile_size: int) -> None:
+    """
+    Draw the ghosts on the canvas.
+
+    The sprite matches each ghost's direction. Chasing ghosts use their own
+    color, scared ghosts share a common sprite, and eaten ghosts are drawn
+    as eyes only.
+
+    Args:
+        canvas: Canvas to draw on.
+        ghosts: Ghosts providing the position, direction, state and color.
+        tile_size: Size of one tile, in pixels.
+    """
+    for ghost in ghosts:
+        if ghost.state == GhostState.SCARED:
+            variant = "scared"
+        elif ghost.state == GhostState.EATEN:
+            variant = "eaten"
+        else:
+            variant = ghost.color
+        path = (f"src/ui/assets/ghost_{variant}"
+                f"_{ghost.direction.name.lower()}.png")
+        canvas.draw_image(canvas.load_image(path, tile_size),
+                          ghost.x * tile_size, ghost.y * tile_size)
