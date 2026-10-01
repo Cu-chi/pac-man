@@ -1,4 +1,4 @@
-from models import Level, Direction, Player, Ghost, GhostState
+from models import Level, Direction, PlayerData, GhostData, GhostState
 from canvas import Canvas, Color
 
 WALL_THICKNESS = 2
@@ -63,7 +63,7 @@ def draw_pacgum(canvas: Canvas, level: Level, tile_size: int) -> None:
                          supergum_size, supergum_size, supergum_color)
 
 
-def draw_player(canvas: Canvas, player: Player, tile_size: int) -> None:
+def draw_player(canvas: Canvas, player: PlayerData, tile_size: int) -> None:
     """
     Draw the player on the canvas.
 
@@ -75,14 +75,16 @@ def draw_player(canvas: Canvas, player: Player, tile_size: int) -> None:
         player: Player providing the position and direction.
         tile_size: Size of one tile, in pixels.
     """
-    state = "open" if (player.x + player.y) % 2 == 0 else "closed"
+    x, y = player.position
+    state = "open" if (x + y) % 2 == 0 else "closed"
     path = (f"src/ui/assets/pacman_{state}"
             f"_{player.direction.name.lower()}.png")
     canvas.draw_image(canvas.load_image(path, tile_size),
-                      player.x * tile_size, player.y * tile_size)
+                      x * tile_size, y * tile_size)
 
 
-def draw_ghosts(canvas: Canvas, ghosts: list[Ghost], tile_size: int) -> None:
+def draw_ghosts(canvas: Canvas, ghosts: list[GhostData],
+                tile_size: int) -> None:
     """
     Draw the ghosts on the canvas.
 
@@ -104,5 +106,6 @@ def draw_ghosts(canvas: Canvas, ghosts: list[Ghost], tile_size: int) -> None:
             variant = ghost.color
         path = (f"src/ui/assets/ghost_{variant}"
                 f"_{ghost.direction.name.lower()}.png")
+        x, y = ghost.position
         canvas.draw_image(canvas.load_image(path, tile_size),
-                          ghost.x * tile_size, ghost.y * tile_size)
+                          x * tile_size, y * tile_size)
