@@ -17,6 +17,7 @@ INSTRUCTIONS_TEXT = [
 
 
 class ScreenMenu(Enum):
+    """Sub-screens the main menu can display."""
 
     MAIN = auto()
     HIGHSCORES = auto()
@@ -24,6 +25,7 @@ class ScreenMenu(Enum):
 
 
 class MenuAction(Enum):
+    """Outcomes the main menu can hand back to its caller."""
 
     START_GAME = auto()
     EXIT = auto()
@@ -31,13 +33,33 @@ class MenuAction(Enum):
 
 @dataclass(slots=True, kw_only=True)
 class Menu:
+    """
+    Main menu: navigation and rendering for Start/Highscores/Instructions/Exit.
+
+    Attributes:
+        screen: Sub-screen currently displayed.
+        selected: Index of the highlighted option on the main screen.
+        highscore: Top scores shown on the highscores screen, as
+            (name, score) pairs already sorted best first.
+    """
 
     screen: ScreenMenu = ScreenMenu.MAIN
     selected: int = 0
     highscore: list[tuple[str, int]] = field(default_factory=list)
 
     def handle_key(self, event: Event) -> MenuAction | None:
+        """Update the menu in response to a key press.
 
+        On a sub-screen (highscores, instructions), only ESCAPE is
+        handled, to go back to the main options.
+
+        Args:
+            event: Key event to react to.
+
+        Returns:
+            The action to perform (start the game, exit), or None while
+            the menu keeps navigating internally.
+        """
         if event.type != EventType.KEY_DOWN:
             return None
 
@@ -64,6 +86,12 @@ class Menu:
                 return None
 
     def draw(self, canvas: Canvas) -> None:
+        """
+        Draw the current sub-screen onto the canvas.
+
+        Args:
+            canvas: Canvas to draw on.
+        """
         match self.screen:
             case ScreenMenu.MAIN:
                 self._draw_main(canvas)
@@ -73,7 +101,12 @@ class Menu:
                 self._draw_instruction(canvas)
 
     def _draw_main(self, canvas: Canvas) -> None:
+        """
+        Draw the title and the Start/Highscores/Instructions/Exit list.
 
+        Args:
+            canvas: Canvas to draw on.
+        """
         line_height = 50
         block_height = len(MENU_OPTIONS) * line_height
         start_y = (canvas.height - block_height) // 2
@@ -86,7 +119,12 @@ class Menu:
                              size=36, centered=True)
 
     def _draw_highscore(self, canvas: Canvas) -> None:
+        """
+        Draw the highscores, or a placeholder when there are none.
 
+        Args:
+            canvas: Canvas to draw on.
+        """
         line_height = 50
         block_height = len(self.highscore) * line_height
         start_y = (canvas.height - block_height) // 2
@@ -103,7 +141,12 @@ class Menu:
                              size=28, centered=True)
 
     def _draw_instruction(self, canvas: Canvas) -> None:
+        """
+        Draw the controls and rules summary.
 
+        Args:
+            canvas: Canvas to draw on.
+        """
         line_height = 50
         block_height = len(INSTRUCTIONS_TEXT) * line_height
         start_y = (canvas.height - block_height) // 2
