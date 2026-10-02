@@ -46,6 +46,4 @@ class PlayerController(BaseEntityController[PlayerData]):
         Returns:
             Direction | None: the actual direction
         """
-        target = self._entity.next_direction
-        self._entity.next_direction = None
-        return target
+        return self._entity.next_direction
