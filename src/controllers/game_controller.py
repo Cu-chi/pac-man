@@ -2,7 +2,7 @@ from models import GameState, GamePhase, GhostState, Direction
 from controllers.player_controller import PlayerController
 from ui.events import Event, EventType
 from configuration import Configuration
-# from ghost.controller import GhostController
+from controllers.ghost_controller import GhostController
 
 
 class GameController:
@@ -16,7 +16,8 @@ class GameController:
         self._state: GameState = state
         self._player_ctrl = PlayerController(state.player, state.level)
         self._ghost_ctrls = [
-            # GhostController(ghost, state.level) for ghost in state.ghosts
+            GhostController(ghost, state.level, state.player)
+            for ghost in state.ghosts
         ]
         self._config = config
 
@@ -29,7 +30,7 @@ class GameController:
 
         self._player_ctrl.update(dt)
         for g_ctrl in self._ghost_ctrls:
-            g_ctrl.update(dt, target=self._state.player.position)
+            g_ctrl.update(dt)
 
         self._check_pacgums()
         self._check_ghost_collisions()
