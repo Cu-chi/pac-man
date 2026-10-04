@@ -83,7 +83,7 @@ class Menu:
                         self.screen = ScreenMenu.HIGHSCORES
                     case "Exit":
                         return MenuAction.EXIT
-                return None
+        return None
 
     def draw(self, canvas: Canvas) -> None:
         """
