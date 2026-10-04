@@ -1,8 +1,12 @@
-from models import GameState, GamePhase, GhostState, Direction
+from models import (
+    GameState, GamePhase,
+    GhostState, Direction,
+    GameEvent, PlayerData, GhostData)
 from controllers.player_controller import PlayerController
 from ui.events import Event, EventType
 from configuration import Configuration
 from controllers.ghost_controller import GhostController
+from levels_generator import LevelsGenerator
 
 
 class GameController:
@@ -10,16 +14,68 @@ class GameController:
 
     def __init__(
         self,
-        state: GameState,
+        levels_gen: LevelsGenerator,
         config: Configuration
     ) -> None:
-        self._state: GameState = state
-        self._player_ctrl = PlayerController(state.player, state.level)
-        self._ghost_ctrls = [
-            GhostController(ghost, state.level, state.player)
-            for ghost in state.ghosts
-        ]
+        self._levels_gen = levels_gen
         self._config = config
+
+        self._level_index = 0
+        self._total_levels: int = len(levels_gen.levels)
+
+        self._state = self._create_game_state(0)
+        self._init_controllers()
+
+    def _create_game_state(self, index: int,
+                           old_player_data: PlayerData | None = None) \
+            -> GameState:
+        current_level = self._levels_gen.levels[index]
+
+        player_data = PlayerData(
+            position=current_level.player_spawn,
+            direction=Direction.RIGHT,
+            lives=(
+                old_player_data.lives
+                if old_player_data else self._config.lives
+            ),
+            score=old_player_data.score if old_player_data else 0
+        )
+
+        ghost_colors = ["red", "pink", "cyan", "orange"]
+        ghosts = [
+            GhostData(
+                position=spawn,
+                direction=Direction.LEFT,
+                state=GhostState.CHASE,
+                color=ghost_colors[i % len(ghost_colors)],
+                respawn_timer=0.0,
+                spawn=spawn,
+            )
+            for i, spawn in enumerate(current_level.ghost_spawns)
+        ]
+
+        return GameState(
+            player=player_data,
+            ghosts=ghosts,
+            level=current_level,
+            level_index=index,
+            total_levels=self._total_levels,
+            time_left=self._config.level_max_time
+        )
+
+    def _init_controllers(self) -> None:
+        self._player_controller = PlayerController(
+            player_data=self._state.player,
+            level=self._state.level
+        )
+        self._ghosts_controllers = [
+            GhostController(
+                ghost_data=ghost_data,
+                level=self._state.level,
+                player_data=self._state.player
+            )
+            for ghost_data in self._state.ghosts
+        ]
 
     def update(self, dt: float) -> None:
         """Run one logic frame."""
@@ -28,8 +84,8 @@ class GameController:
 
         self._update_timers(dt)
 
-        self._player_ctrl.update(dt)
-        for g_ctrl in self._ghost_ctrls:
+        self._player_controller.update(dt)
+        for g_ctrl in self._ghosts_controllers:
             g_ctrl.update(dt)
 
         self._check_pacgums()
@@ -41,7 +97,7 @@ class GameController:
             return
 
         if self._state.phase == GamePhase.PLAYING:
-            self._player_ctrl.handle_key(event)
+            self._player_controller.handle_key(event)
 
     def _update_timers(self, dt: float) -> None:
         """Update level time limit and ghost scared duration."""
@@ -108,5 +164,4 @@ class GameController:
             if self._state.level_index + 1 >= self._state.total_levels:
                 self._state.phase = GamePhase.VICTORY
             else:
-                #  TODO: next level
-                pass
+                self._state.events += [GameEvent.LEVEL_WON]
