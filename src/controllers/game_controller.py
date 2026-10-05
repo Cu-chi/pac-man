@@ -23,7 +23,7 @@ class GameController:
         self._level_index = 0
         self._total_levels: int = len(levels_gen.levels)
 
-        self._state = self._create_game_state(0)
+        self.state = self._create_game_state(0)
         self._init_controllers()
 
     def _create_game_state(self, index: int,
@@ -60,26 +60,27 @@ class GameController:
             level=current_level,
             level_index=index,
             total_levels=self._total_levels,
-            time_left=self._config.level_max_time
+            time_left=self._config.level_max_time,
+            phase=GamePhase.PLAYING
         )
 
     def _init_controllers(self) -> None:
         self._player_controller = PlayerController(
-            player_data=self._state.player,
-            level=self._state.level
+            player_data=self.state.player,
+            level=self.state.level
         )
         self._ghosts_controllers = [
             GhostController(
                 ghost_data=ghost_data,
-                level=self._state.level,
-                player_data=self._state.player
+                level=self.state.level,
+                player_data=self.state.player
             )
-            for ghost_data in self._state.ghosts
+            for ghost_data in self.state.ghosts
         ]
 
     def update(self, dt: float) -> None:
         """Run one logic frame."""
-        if self._state.phase != GamePhase.PLAYING:
+        if self.state.phase != GamePhase.PLAYING:
             return
 
         self._update_timers(dt)
@@ -96,72 +97,82 @@ class GameController:
         if event.type != EventType.KEY_DOWN:
             return
 
-        if self._state.phase == GamePhase.PLAYING:
+        if self.state.phase == GamePhase.PLAYING:
             self._player_controller.handle_key(event)
 
     def _update_timers(self, dt: float) -> None:
         """Update level time limit and ghost scared duration."""
-        self._state.time_left -= dt
-        if self._state.time_left <= 0:
-            self._state.phase = GamePhase.GAME_OVER
+        self.state.time_left -= dt
+        if self.state.time_left <= 0:
+            self.state.phase = GamePhase.GAME_OVER
 
-        if self._state.scared_time_left > 0:
-            self._state.scared_time_left = \
-                max(0.0, self._state.scared_time_left - dt)
-            if self._state.scared_time_left == 0.0:
-                for ghost in self._state.ghosts:
+        if self.state.scared_time_left > 0:
+            self.state.scared_time_left = \
+                max(0.0, self.state.scared_time_left - dt)
+            if self.state.scared_time_left == 0.0:
+                for ghost in self.state.ghosts:
                     if ghost.state == GhostState.SCARED:
                         ghost.state = GhostState.CHASE
 
     def _check_pacgums(self) -> None:
         """Check if player eats a normal or super pacgum."""
-        pos = self._state.player.position
+        pos = self.state.player.position
 
         # pacgum
-        if pos in self._state.level.pacgums:
-            self._state.level.pacgums.remove(pos)
-            self._state.player.score += self._config.points_per_pacgum
+        if pos in self.state.level.pacgums:
+            self.state.level.pacgums.remove(pos)
+            self.state.player.score += self._config.points_per_pacgum
 
         # super-pacgum
-        if pos in self._state.level.super_pacgums:
-            self._state.level.super_pacgums.remove(pos)
-            self._state.player.score += self._config.points_per_super_pacgum
-            self._state.scared_time_left = 10.0  # TODO: set in config maybe?
-            for ghost in self._state.ghosts:
+        if pos in self.state.level.super_pacgums:
+            self.state.level.super_pacgums.remove(pos)
+            self.state.player.score += self._config.points_per_super_pacgum
+            self.state.scared_time_left = 10.0  # TODO: set in config maybe?
+            for ghost in self.state.ghosts:
                 if ghost.state == GhostState.CHASE:
                     ghost.state = GhostState.SCARED
 
     def _check_ghost_collisions(self) -> None:
         """Centralized collision check between player and ghosts."""
-        player_pos = self._state.player.position
+        player_pos = self.state.player.position
 
-        for ghost in self._state.ghosts:
+        for ghost in self.state.ghosts:
             if ghost.position == player_pos:
                 if ghost.state == GhostState.SCARED:
                     ghost.state = GhostState.EATEN
-                    self._state.player.score += self._config.points_per_ghost
+                    self.state.player.score += self._config.points_per_ghost
                 elif ghost.state == GhostState.CHASE:
-                    self._state.player.lives -= 1
-                    if self._state.player.lives <= 0:
-                        self._state.phase = GamePhase.GAME_OVER
+                    self.state.player.lives -= 1
+                    if self.state.player.lives <= 0:
+                        self.state.phase = GamePhase.GAME_OVER
                     else:
                         self._reset_positions()
                     break
 
     def _reset_positions(self) -> None:
         """Reset player and ghosts back to their spawn points after a death."""
-        self._state.player.position = self._state.level.player_spawn
-        self._state.player.direction = Direction.RIGHT
-        self._state.player.next_direction = None
-        for ghost in self._state.ghosts:
+        self.state.player.position = self.state.level.player_spawn
+        self.state.player.direction = Direction.RIGHT
+        self.state.player.next_direction = None
+        for ghost in self.state.ghosts:
             ghost.position = ghost.spawn
             ghost.state = GhostState.CHASE
 
+    def load_next_level(self) -> None:
+        """Advance to the next level or trigger victory."""
+        if self._level_index + 1 >= self._total_levels:
+            self.state.phase = GamePhase.VICTORY
+            return
+
+        self._level_index += 1
+        self.state = self._create_game_state(
+            self._level_index, old_player_data=self.state.player
+        )
+        self._init_controllers()
+        self.state.events.append(GameEvent.LEVEL_WON)
+
     def _check_game_status(self) -> None:
         """Check victory conditions."""
-        if not self._state.level.pacgums \
-           and not self._state.level.super_pacgums:
-            if self._state.level_index + 1 >= self._state.total_levels:
-                self._state.phase = GamePhase.VICTORY
-            else:
-                self._state.events += [GameEvent.LEVEL_WON]
+        if not self.state.level.pacgums \
+           and not self.state.level.super_pacgums:
+            self.load_next_level()
