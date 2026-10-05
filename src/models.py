@@ -4,6 +4,7 @@ from typing import Any
 from pydantic import BaseModel, Field, field_validator, ValidationInfo, \
     ValidationError, model_validator
 from pydantic.fields import FieldInfo
+from pydantic import ConfigDict
 
 
 class LevelConfig(BaseModel):
@@ -34,6 +35,15 @@ class Configuration(BaseModel):
                     print(f"Missing key '{field_name}' in JSON. Setting "
                           f" default value {def_val}")
         return data
+
+    @model_validator(mode="after")
+    def pad_levels_to_minimum(cls, config: "Configuration") -> "Configuration":
+        if len(config.levels) < 10:
+            print(f"Warning: config has only {len(config.levels)} levels, "
+                  f"padding to 10 with defaults.")
+            while len(config.levels) < 10:
+                config.levels.append(LevelConfig())
+        return config
 
     @field_validator("*", mode="wrap")
     @classmethod
