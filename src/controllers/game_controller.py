@@ -114,6 +114,12 @@ class GameController:
                     if ghost.state == GhostState.SCARED:
                         ghost.state = GhostState.CHASE
 
+        for ghost in self.state.ghosts:
+            if ghost.state == GhostState.EATEN:
+                ghost.respawn_timer = max(0.0, ghost.respawn_timer - dt)
+                if ghost.respawn_timer == 0.0:
+                    ghost.state = GhostState.CHASE
+
     def _check_pacgums(self) -> None:
         """Check if player eats a normal or super pacgum."""
         pos = self.state.player.position
@@ -140,6 +146,7 @@ class GameController:
             if ghost.position == player_pos:
                 if ghost.state == GhostState.SCARED:
                     ghost.state = GhostState.EATEN
+                    ghost.respawn_timer += 10.0
                     self.state.player.score += self._config.points_per_ghost
                 elif ghost.state == GhostState.CHASE:
                     self.state.player.lives -= 1
