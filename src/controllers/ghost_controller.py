@@ -94,9 +94,6 @@ class GhostController(BaseEntityController[GhostData]):
             tuple[int, int]: Target coords
         """
         if self._entity.state == GhostState.EATEN:
-            if self._entity.position == self._entity.spawn:
-                self._entity.state = GhostState.CHASE
-                return self._player_data.position
             return self._entity.spawn
 
         return self._player_data.position
