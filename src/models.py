@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Any
+from typing import Any, Self
 from pydantic import BaseModel, Field, field_validator, ValidationInfo, \
     ValidationError, model_validator
 from pydantic.fields import FieldInfo
@@ -34,6 +34,15 @@ class Configuration(BaseModel):
                     print(f"Missing key '{field_name}' in JSON. Setting "
                           f" default value {def_val}")
         return data
+
+    @model_validator(mode="after")
+    def pad_levels(self) -> Self:
+        if len(self.levels) < 10:
+            print(f"Warning: config has only {len(self.levels)} levels, "
+                  f"padding to 10 with defaults.")
+            while len(self.levels) < 10:
+                self.levels.append(LevelConfig())
+        return self
 
     @field_validator("*", mode="wrap")
     @classmethod
