@@ -16,9 +16,11 @@ class GhostController(BaseEntityController[GhostData]):
     """Controller for the ghost entities."""
 
     def __init__(self, ghost_data: GhostData, level: Level,
-                 player_data: PlayerData, speed: float = 5.0) -> None:
+                 player_data: PlayerData, speed: float = 5.0,
+                 scared_speed_multiplier: float = 0.75) -> None:
         super().__init__(ghost_data, level, speed)
         self._player_data = player_data
+        self._scared_speed_multiplier = scared_speed_multiplier
         self._base_speed = speed
 
     def update(self, dt: float) -> None:
@@ -30,7 +32,7 @@ class GhostController(BaseEntityController[GhostData]):
 
         match self._entity.state:
             case GhostState.SCARED:
-                self.speed = self._base_speed * 0.75  # -25% speed when scared
+                self.speed = self._base_speed * self._scared_speed_multiplier
             case GhostState.EATEN:
                 self.speed = self._base_speed * 1.5  # +50% speed to back
             case GhostState.CHASE:
