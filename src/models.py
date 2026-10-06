@@ -126,6 +126,13 @@ class GhostData(Entity):
     spawn: tuple[int, int]
 
 
+@dataclass(slots=True, kw_only=True)
+class Cheats():
+    invincible: bool = False
+    ghosts_freeze: bool = False
+    skip_level: bool = False
+
+
 class GamePhase(Enum):
 
     MENU = auto()
@@ -153,5 +160,6 @@ class GameState():
     total_levels: int
     time_left: float
     scared_time_left: float = 0.0
+    cheats: Cheats = field(default_factory=Cheats)
     phase: GamePhase = GamePhase.MENU
     events: list[GameEvent] = field(default_factory=list)

@@ -23,7 +23,7 @@ class GhostController(BaseEntityController[GhostData]):
         self._scared_speed_multiplier = scared_speed_multiplier
         self._base_speed = speed
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float, freeze: bool = False) -> None:
         """Update ghost speed according to its state, then step movement.
 
         Args:
@@ -37,6 +37,9 @@ class GhostController(BaseEntityController[GhostData]):
                 self.speed = self._base_speed * 1.5  # +50% speed to back
             case GhostState.CHASE:
                 self.speed = self._base_speed
+
+        if freeze:
+            self.speed = 0.0
 
         super().update(dt)
 

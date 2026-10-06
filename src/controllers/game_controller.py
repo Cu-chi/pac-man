@@ -90,7 +90,7 @@ class GameController:
 
         self._player_controller.update(dt)
         for g_ctrl in self._ghosts_controllers:
-            g_ctrl.update(dt)
+            g_ctrl.update(dt, self.state.cheats.ghosts_freeze)
 
         self._check_pacgums()
         self._check_ghost_collisions()
@@ -152,6 +152,8 @@ class GameController:
                     ghost.respawn_timer += self._config.ghost_respawn_timer
                     self.state.player.score += self._config.points_per_ghost
                 elif ghost.state == GhostState.CHASE:
+                    if self.state.cheats.invincible:
+                        break
                     self.state.player.lives -= 1
                     if self.state.player.lives <= 0:
                         self.state.phase = GamePhase.GAME_OVER
@@ -185,4 +187,7 @@ class GameController:
         """Check victory conditions."""
         if not self.state.level.pacgums \
            and not self.state.level.super_pacgums:
+            self.load_next_level()
+        elif self.state.cheats.skip_level:
+            self.state.cheats.skip_level = False
             self.load_next_level()
