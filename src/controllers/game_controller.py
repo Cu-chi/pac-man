@@ -67,13 +67,16 @@ class GameController:
     def _init_controllers(self) -> None:
         self._player_controller = PlayerController(
             player_data=self.state.player,
-            level=self.state.level
+            level=self.state.level,
+            speed=self._config.player_speed
         )
         self._ghosts_controllers = [
             GhostController(
                 ghost_data=ghost_data,
                 level=self.state.level,
-                player_data=self.state.player
+                player_data=self.state.player,
+                speed=self._config.ghost_speed,
+                scared_speed_multiplier=self._config.ghost_scared_multiplier
             )
             for ghost_data in self.state.ghosts
         ]
@@ -133,7 +136,7 @@ class GameController:
         if pos in self.state.level.super_pacgums:
             self.state.level.super_pacgums.remove(pos)
             self.state.player.score += self._config.points_per_super_pacgum
-            self.state.scared_time_left = 10.0  # TODO: set in config maybe?
+            self.state.scared_time_left = self._config.ghost_scared_timer
             for ghost in self.state.ghosts:
                 if ghost.state == GhostState.CHASE:
                     ghost.state = GhostState.SCARED
@@ -146,7 +149,7 @@ class GameController:
             if ghost.position == player_pos:
                 if ghost.state == GhostState.SCARED:
                     ghost.state = GhostState.EATEN
-                    ghost.respawn_timer += 10.0
+                    ghost.respawn_timer += self._config.ghost_respawn_timer
                     self.state.player.score += self._config.points_per_ghost
                 elif ghost.state == GhostState.CHASE:
                     self.state.player.lives -= 1
