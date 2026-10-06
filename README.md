@@ -98,6 +98,61 @@ Here is a configuration file showing comments, custom scoring, and tailored leve
 
 ## Maze Generation
 
+In compliance with project specifications, mazes are generated using the mazegenerator package integrated **as-is without any internal modifications**. Our backend acts as an adapter layer through `LevelsGenerator` to convert the raw generated grid into a fully playable Pac-Man stage.
+
+### Integration & Parameters
+
+The generator is instantiated for each level with specific constraints tailored to Pac-Man gameplay:
+
+```python
+maze = MazeGenerator(
+    size=(level.width, level.height),
+    perfect=False,
+    seed=config.seed if level_index == 0 else 0
+)
+```
+
+* **Non-Perfect Mazes (`perfect=False`)**: Standard perfect mazes contain only a single path between any two points and numerous dead-ends, which would make escaping ghosts impossible.
+* **Seed Management**:
+  * **Level 1**: Generated using the fixed `seed` provided in `config.json`. This guarantees deterministic behavior and reproducible evaluation during defense.
+  * **Subsequent Levels (2 to 10+)**: Generated with randomized seeds (`seed=0`), ensuring every subsequent level features a unique, procedurally generated layout.
+
+### Grid Representation: Bitmask Walls
+
+The assigned generator outputs the maze as a 2D integer array (`list[list[int]]`). Each tile stores its wall boundaries as a 4-bit bitmask:
+
+| Bit | Value | Direction | Meaning |
+| :---: | :---: | :---: | :--- |
+| `0` | **1** | North (UP) | Wall blocks movement upwards |
+| `1` | **2** | East (RIGHT) | Wall blocks movement to the right |
+| `2` | **4** | South (DOWN) | Wall blocks movement downwards |
+| `3` | **8** | West (LEFT) | Wall blocks movement to the left |
+
+* **Corridor Tiles (`value < 15`)**: Tiles with at least one open wall where entities can navigate.
+* **Solid Wall Tiles (`value == 15`)**: Completely enclosed cells ($1 + 2 + 4 + 8 = 15$) representing solid architectural obstacles, such as the outer perimeter and the central "42" logo.
+
+### Adapter Pipeline (`LevelsGenerator`)
+
+Once the raw maze is generated, our `LevelsGenerator` adapts the grid into our internal `Level` data model:
+
+1. **Player Spawn (`find_player_spawn`)**:
+   * Evaluates the geometric center of the maze (`width // 2`, `height // 2`).
+   * Searches the center and its 8 immediate neighboring tiles in cardinal and diagonal order to guarantee the player spawns in an open corridor (`value != 15`), even if the exact center lands on a solid wall segment.
+2. **Ghost Spawns & Super-Pacgums**:
+   * Positioned strategically in the 4 extreme corners of the board:
+     * Top-Left: `(0, 0)`
+     * Top-Right: `(width - 1, 0)`
+     * Bottom-Right: `(width - 1, height - 1)`
+     * Bottom-Left: `(0, height - 1)`
+3. **Pacgum Distribution (`create_pacgums`)**:
+   * Iterates across all playable corridor cells (`value != 15`).
+   * Generates regular pacgums probabilistically (90% spawn chance), leaving the player's starting cell empty so the player does not immediately consume a dot upon spawning.
+
+### Error Handling & Robustness
+
+* **Dimension Protection**: Maze dimensions are validated to meet the minimum size required by the generator.
+* **Fallback Guarantee**: In the unlikely event that a seed produces an inaccessible central spawn, a custom `SpawnNotFoundException` is trapped gracefully, falling back to a safe default corridor position without crashing the application.
+
 ## Implementation
 
 ## General Software Architecture
