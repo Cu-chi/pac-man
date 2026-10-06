@@ -9,8 +9,8 @@ from pydantic.fields import FieldInfo
 
 class LevelConfig(BaseModel):
 
-    width: int = Field(default=21, ge=5)
-    height: int = Field(default=21, ge=5)
+    width: int = Field(default=10, ge=5)
+    height: int = Field(default=10, ge=5)
 
 
 class Configuration(BaseModel):
@@ -23,7 +23,7 @@ class Configuration(BaseModel):
     points_per_super_pacgum: int = Field(default=50, ge=0)
     points_per_ghost: int = Field(default=200, ge=0)
     seed: int = Field(default=42, gt=0)
-    level_max_time: int = Field(default=90, gt=0)
+    level_max_time: int = Field(default=300, gt=0)
     player_speed: float = Field(default=6.0, ge=1.0, le=15.0)
     ghost_speed: float = Field(default=5.0, ge=1.0, le=15.0)
     ghost_scared_timer: float = Field(default=10.0, ge=3.0)
