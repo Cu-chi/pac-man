@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any, Self
@@ -32,14 +33,14 @@ class Configuration(BaseModel):
                 if field_name not in data:
                     def_val = field_info.get_default(call_default_factory=True)
                     print(f"Missing key '{field_name}' in JSON. Setting "
-                          f" default value {def_val}")
+                          f" default value {def_val}", file=sys.stderr)
         return data
 
     @model_validator(mode="after")
     def pad_levels(self) -> Self:
         if len(self.levels) < 10:
             print(f"Warning: config has only {len(self.levels)} levels, "
-                  f"padding to 10 with defaults.")
+                  f"padding to 10 with defaults.", file=sys.stderr)
             while len(self.levels) < 10:
                 self.levels.append(LevelConfig())
         return self
@@ -64,7 +65,7 @@ class Configuration(BaseModel):
 
             print(f"Invalid value for '{field_name}':"
                   f" {exc.errors()[0]['msg']}, setting default value"
-                  f" '{default_val}'")
+                  f" '{default_val}'", file=sys.stderr)
             return default_val
 
 
