@@ -1,10 +1,10 @@
 from models import (
     GameState, GamePhase,
     GhostState, Direction,
-    GameEvent, PlayerData, GhostData)
+    GameEvent, PlayerData, GhostData,
+    Configuration)
 from controllers.player_controller import PlayerController
 from ui.events import Event, EventType
-from models import Configuration
 from controllers.ghost_controller import GhostController
 from levels_generator import LevelsGenerator
 
