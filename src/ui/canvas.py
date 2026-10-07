@@ -1,6 +1,6 @@
 import pygame
 import time
-from events import Key, EventType, Event
+from ui.events import Key, EventType, Event
 from types import TracebackType
 from typing import Self, Callable
 

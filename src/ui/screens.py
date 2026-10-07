@@ -1,7 +1,7 @@
-from canvas import Canvas, Color
+from ui.canvas import Canvas, Color
 from dataclasses import dataclass
 from enum import Enum, auto
-from events import Event, EventType, Key
+from ui.events import Event, EventType, Key
 from models import GameState
 
 HUD_HEIGHT = 30

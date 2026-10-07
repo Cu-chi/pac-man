@@ -1,7 +1,7 @@
-from canvas import Canvas
+from ui.canvas import Canvas
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from events import Event, EventType, Key
+from ui.events import Event, EventType, Key
 
 MENU_OPTIONS = ["Start Game", "Instructions", "View Highscores",
                 "Exit"]
