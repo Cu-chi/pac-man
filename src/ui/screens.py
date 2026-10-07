@@ -135,6 +135,8 @@ class EndScreen:
             return None
         if event.key == Key.ENTER:
             name = self.name.strip()
+            if len(name) < 3:
+                return None
             return name if name else None
         if event.key == Key.BACKSPACE:
             self.name = self.name[:-1]
