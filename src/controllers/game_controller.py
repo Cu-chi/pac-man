@@ -4,7 +4,7 @@ from models import (
     GameEvent, PlayerData, GhostData)
 from controllers.player_controller import PlayerController
 from ui.events import Event, EventType
-from configuration import Configuration
+from models import Configuration
 from controllers.ghost_controller import GhostController
 from levels_generator import LevelsGenerator
 

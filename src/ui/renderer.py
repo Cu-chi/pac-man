@@ -1,5 +1,5 @@
 from models import Level, Direction, PlayerData, GhostData, GhostState
-from canvas import Canvas, Color
+from ui.canvas import Canvas, Color
 
 WALL_THICKNESS = 2
 WALL_COLOR: Color = (33, 33, 222)
