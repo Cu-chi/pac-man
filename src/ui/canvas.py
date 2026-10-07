@@ -47,7 +47,7 @@ class Canvas:
         self._last_tick = time.time()
         self._fonts: dict[int, pygame.font.Font] = {}
         self._key_hook: Callable[[Event], None] | None = None
-        self._loop_hook: Callable[[], None] | None = None
+        self._loop_hook: Callable[[float], None] | None = None
         self._running: bool = False
         self._images: dict[tuple[str, int], pygame.Surface] = {}
 
@@ -206,14 +206,15 @@ class Canvas:
         """
         self._key_hook = func
 
-    def loop_hook(self, func: Callable[[], None]) -> None:
+    def loop_hook(self, func: Callable[[float], None]) -> None:
         """Register the callback called once per turn of `loop`.
 
-        Replaces any previously registered loop callback. Called with no
-        argument, once the pending events for that turn have been handled.
+        Replaces any previously registered loop callback. Called once the
+        pending events for that turn have been handled.
 
         Args:
-            func: Called once per turn of the main loop.
+            func: Called once per turn of the main loop with the time elapsed
+            since the previous turn, in seconds.
         """
         self._loop_hook = func
 
@@ -221,15 +222,22 @@ class Canvas:
         """Stop `loop` after its current turn completes."""
         self._running = False
 
-    def loop(self) -> None:
+    def loop(self, fps: int = 60) -> None:
         """Run the main loop until `loop_exit` is called.
 
-        Each turn drains pending window and keyboard events, dispatching
-        them to the registered `key_hook`, then calls the registered
-        `loop_hook`. Blocks until `loop_exit` is called.
+        Each turn waits so the loop runs at most `fps` times per second, drains
+        pending window and keyboard events, dispatching them to the registered
+        `key_hook`, then calls the registered `loop_hook` with the time
+        elapsed since the previous turn and shows the frame. Blocks until
+        `loop_exit` is called.
+
+        Args:
+            fps: Maximum number of turns per second.
         """
         self._running = True
+        self._last_tick = time.time()
         while self._running:
+            dt = self.tick(fps)
             for raw_event in pygame.event.get():
                 if raw_event.type == pygame.QUIT:
                     self.loop_exit()
@@ -240,7 +248,8 @@ class Canvas:
                     if self._key_hook is not None:
                         self._key_hook(event)
             if self._loop_hook is not None:
-                self._loop_hook()
+                self._loop_hook(dt)
+                self.present()
 
     def close(self) -> None:
         """Close the window and release pygame's resources."""
