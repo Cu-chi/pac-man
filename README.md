@@ -166,8 +166,8 @@ Therefore, the ['issues' section](https://github.com/Cu-chi/pac-man/issues) of o
 We opened an issue for each feature or bug then we were attributed to specific and we worked on our side without conflicts.
 
 ## Resources
-https://pydantic.dev/docs/validation/dev/concepts/validators/
-https://pydantic.dev/docs/validation/dev/concepts/json/
-https://stackoverflow.com/questions/77248283/using-with-open-why-does-rb-for-reading-json-work-but-wb-for-writing-to-a-j
+https://pydantic.dev/docs/validation/dev/concepts/validators/  
+https://pydantic.dev/docs/validation/dev/concepts/json/  
+https://stackoverflow.com/questions/77248283/using-with-open-why-does-rb-for-reading-json-work-but-wb-for-writing-to-a-j  
 
 AI usage:
