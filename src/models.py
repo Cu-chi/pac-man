@@ -140,6 +140,7 @@ class GamePhase(Enum):
     PAUSED = auto()
     GAME_OVER = auto()
     VICTORY = auto()
+    LEVEL_COMPLETED = auto()
 
 
 class GameEvent(Enum):
