@@ -1,12 +1,13 @@
 import sys
 from ui.screens import HUD_HEIGHT
-from models import Configuration
+from models import Configuration, GamePhase
 from pydantic import ValidationError
 from configuration import load_config
 from highscores import Highscores
 from ui import (Canvas, Menu, MenuAction,
                 Event, draw_hud, draw_ghosts,
-                draw_maze, draw_pacgum, draw_player)
+                draw_maze, draw_pacgum, draw_player,
+                PauseAction, PauseMenu)
 from pathlib import Path
 from enum import Enum, auto
 from levels_generator import LevelsGenerator
@@ -27,16 +28,17 @@ class Screen(Enum):
 class App():
 
     def __init__(self, canvas: Canvas, config: Configuration,
-                 highscores: Highscores, game_controller: GameController,
-                 tile_size: int = TILE_SIZE) -> None:
+                 highscores: Highscores, tile_size: int = TILE_SIZE) -> None:
         self.canvas = canvas
         self.config = config
         self.highscores = highscores
-        self.game_controller = game_controller
         self.tile_size = tile_size
         self.screen = Screen.MENU
+        self.pause = PauseMenu()
         self.menu = Menu()
+        self.game_controller: GameController | None = None
         self._refresh_highscores()
+        self._create_game()
 
     def _refresh_highscores(self) -> None:
         ranked = sorted(self.highscores.score, key=lambda s: s.score,
@@ -44,15 +46,29 @@ class App():
         top = ranked[:10]
         self.menu.highscore = [(s.username, s.score) for s in top]
 
+    def _create_game(self) -> None:
+        self.levels_gen = LevelsGenerator(self.config)
+        self.game_controller = GameController(self.levels_gen, self.config)
+
     def on_key(self, event: Event) -> None:
         if self.screen == Screen.MENU:
             action = self.menu.handle_key(event)
             if action == MenuAction.EXIT:
                 self.canvas.loop_exit()
             elif action == MenuAction.START_GAME:
+                self._create_game()
                 self.screen = Screen.PLAYING
         elif self.screen == Screen.PLAYING:
-            self.game_controller.handle_key(event)
+            action = self.game_controller.handle_key(event)
+            if action == GamePhase.PAUSED:
+                self.screen = Screen.PAUSED
+        elif self.screen == Screen.PAUSED:
+            action = self.pause.handle_key(event)
+            if action == PauseAction.RESUME:
+                self.screen = Screen.PLAYING
+                self.game_controller.resume()
+            elif action == PauseAction.MAIN_MENU:
+                self.screen = Screen.MENU
 
     def on_frame(self, dt: float) -> None:
         self.canvas.clear()
@@ -67,6 +83,8 @@ class App():
             draw_player(self.canvas, self.game_controller.state.player, tsize)
             draw_ghosts(self.canvas, self.game_controller.state.ghosts, tsize)
             self.game_controller.update(dt)
+        elif self.screen == Screen.PAUSED:
+            self.pause.draw(self.canvas)
 
 
 def main() -> None:
@@ -74,8 +92,6 @@ def main() -> None:
         print("Error: no configuration file given.", file=sys.stderr)
         sys.exit(1)
     config = load_config(sys.argv[1])
-    levels_gen = LevelsGenerator(config)
-    game_controller = GameController(levels_gen, config)
     try:
         highscores = Highscores.load_json(Path(config.highscore_filename))
     except (ValidationError, OSError) as e:
@@ -88,7 +104,7 @@ def main() -> None:
                         for level in config.levels) * TILE_SIZE + HUD_HEIGHT
 
     with Canvas(window_width, window_height, "PAC-MAN") as canvas:
-        app = App(canvas, config, highscores, game_controller)
+        app = App(canvas, config, highscores)
         canvas.key_hook(app.on_key)
         canvas.loop_hook(app.on_frame)
         canvas.loop()
