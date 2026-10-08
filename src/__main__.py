@@ -28,9 +28,14 @@ class Screen(Enum):
 class App():
 
     def __init__(self, canvas: Canvas, config: Configuration,
-                 highscores: Highscores, tile_size: int = TILE_SIZE) -> None:
+                 tile_size: int = TILE_SIZE) -> None:
         self.canvas = canvas
         self.config = config
+        try:
+            highscores = Highscores.load_json(Path(config.highscore_filename))
+        except (ValidationError, OSError) as e:
+            print(f"Warning: {e}", file=sys.stderr)
+            highscores = Highscores()
         self.highscores = highscores
         self.tile_size = tile_size
         self.screen = Screen.MENU
@@ -80,6 +85,7 @@ class App():
                 )
                 self.end_screen.name = ""
                 self._refresh_highscores()
+                self.highscores.save_json(Path(self.config.highscore_filename))
                 self.screen = Screen.MENU
 
     def on_frame(self, dt: float) -> None:
@@ -120,11 +126,6 @@ def main() -> None:
         print("Error: no configuration file given.", file=sys.stderr)
         sys.exit(1)
     config = load_config(sys.argv[1])
-    try:
-        highscores = Highscores.load_json(Path(config.highscore_filename))
-    except (ValidationError, OSError) as e:
-        print(f"Warning: {e}", file=sys.stderr)
-        highscores = Highscores()
 
     maze_width = max(level.width for level in config.levels) * TILE_SIZE
     window_width = max(MIN_WINDOW_WIDTH, maze_width)
@@ -132,7 +133,7 @@ def main() -> None:
                         for level in config.levels) * TILE_SIZE + HUD_HEIGHT
 
     with Canvas(window_width, window_height, "PAC-MAN") as canvas:
-        app = App(canvas, config, highscores)
+        app = App(canvas, config)
         canvas.key_hook(app.on_key)
         canvas.loop_hook(app.on_frame)
         canvas.loop()
