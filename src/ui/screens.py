@@ -141,7 +141,7 @@ class EndScreen:
         if event.key == Key.BACKSPACE:
             self.name = self.name[:-1]
         elif (len(event.char) == 1
-              and (event.char.isalnum() or event.char == " ")
+              and event.char.isalnum()
               and event.char.isascii()
               and len(self.name) < NAME_MAX_LENGTH):
             self.name += event.char
