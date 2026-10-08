@@ -4,10 +4,8 @@ from ui.screens import HUD_HEIGHT
 from models import Configuration
 from pydantic import ValidationError
 from configuration import load_config
-from highscores.highscores import Highscores
-from ui.canvas import Canvas
-from ui.menu import Menu, MenuAction
-from ui.events import Event
+from highscores import Highscores
+from ui import Canvas, Menu, MenuAction, Event, Path
 from pathlib import Path
 from enum import Enum, auto
 
