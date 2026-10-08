@@ -5,8 +5,7 @@ from pydantic import ValidationError
 from configuration import load_config
 from highscores import Highscores, Score
 from ui import (Canvas, Menu, MenuAction,
-                Event, draw_hud, draw_ghosts,
-                draw_maze, draw_pacgum, draw_player,
+                Event, draw_hud, Renderer,
                 PauseAction, PauseMenu, EndScreen)
 from pathlib import Path
 from enum import Enum, auto
@@ -38,6 +37,7 @@ class App():
             highscores = Highscores()
         self.highscores = highscores
         self.tile_size = tile_size
+        self.renderer = Renderer(self.canvas, self.tile_size)
         self.screen = Screen.MENU
         self.pause = PauseMenu()
         self.menu = Menu()
@@ -93,19 +93,8 @@ class App():
         if self.screen == Screen.MENU:
             self.menu.draw(self.canvas)
         elif self.screen == Screen.PLAYING:
-            level = self.game_controller.state.level
-            tsize = self.tile_size
-            offset = (
-                (self.canvas.width - level.width * tsize) // 2,
-                (self.canvas.height - HUD_HEIGHT - level.height * tsize) // 2
-            )
-            draw_maze(self.canvas, level, tsize, offset)
-            draw_pacgum(self.canvas, level, tsize, offset)
+            self.renderer.draw(self.game_controller.state)
             draw_hud(self.canvas, self.game_controller.state)
-            draw_player(self.canvas, self.game_controller.state.player, tsize,
-                        offset)
-            draw_ghosts(self.canvas, self.game_controller.state.ghosts, tsize,
-                        offset)
             self.game_controller.update(dt)
             if self.game_controller.state.phase == GamePhase.GAME_OVER:
                 self.end_screen.victory = False
