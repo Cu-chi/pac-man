@@ -5,7 +5,7 @@ from models import Configuration
 from pydantic import ValidationError
 from configuration import load_config
 from highscores import Highscores
-from ui import Canvas, Menu, MenuAction, Event, Path
+from ui import Canvas, Menu, MenuAction, Event
 from pathlib import Path
 from enum import Enum, auto
 
