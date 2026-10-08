@@ -1,10 +1,10 @@
 from models import (
     GameState, GamePhase,
     GhostState, Direction,
-    GameEvent, PlayerData, GhostData)
+    GameEvent, PlayerData, GhostData,
+    Configuration)
 from controllers.player_controller import PlayerController
-from ui.events import Event, EventType
-from configuration import Configuration
+from ui.events import Event, EventType, Key
 from controllers.ghost_controller import GhostController
 from levels_generator import LevelsGenerator
 
@@ -96,11 +96,17 @@ class GameController:
         self._check_ghost_collisions()
         self._check_game_status()
 
-    def handle_key(self, event: Event) -> None:
+    def resume(self) -> None:
+        self.state.phase = GamePhase.PLAYING
+
+    def handle_key(self, event: Event) -> GamePhase:
         if event.type != EventType.KEY_DOWN:
             return
 
         if self.state.phase == GamePhase.PLAYING:
+            if event.key == Key.ESCAPE:
+                self.state.phase = GamePhase.PAUSED
+                return self.state.phase
             self._player_controller.handle_key(event)
 
     def _update_timers(self, dt: float) -> None:
