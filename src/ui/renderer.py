@@ -5,7 +5,8 @@ WALL_THICKNESS = 2
 WALL_COLOR: Color = (33, 33, 222)
 
 
-def draw_maze(canvas: Canvas, level: Level, tile_size: int) -> None:
+def draw_maze(canvas: Canvas, level: Level, tile_size: int,
+              offset: tuple[int, int] = (0, 0)) -> None:
     """
     Draw the maze walls of a level on the canvas.
 
@@ -16,10 +17,13 @@ def draw_maze(canvas: Canvas, level: Level, tile_size: int) -> None:
         canvas: Canvas to draw on.
         level: Level providing the grid dimensions and wall bitmasks.
         tile_size: Size of one tile, in pixels.
+        offset: Pixel position (x, y) of the maze's top-left corner on
+            the canvas.
     """
+    ox, oy = offset
     for y in range(level.height):
         for x in range(level.width):
-            px, py = x * tile_size, y * tile_size
+            px, py = ox + x * tile_size, oy + y * tile_size
             cell = level.walls[y][x]
             for direction in Direction:
                 dx, dy, bit = direction.value
@@ -33,7 +37,8 @@ def draw_maze(canvas: Canvas, level: Level, tile_size: int) -> None:
                     canvas.draw_rect(wall_x, wall_y, w, h, WALL_COLOR)
 
 
-def draw_pacgum(canvas: Canvas, level: Level, tile_size: int) -> None:
+def draw_pacgum(canvas: Canvas, level: Level, tile_size: int,
+                offset: tuple[int, int] = (0, 0)) -> None:
     """
     Draw the pacgums and super pacgums of a level on the canvas.
 
@@ -44,26 +49,30 @@ def draw_pacgum(canvas: Canvas, level: Level, tile_size: int) -> None:
         canvas: Canvas to draw on.
         level: Level providing the pacgum and super pacgum positions.
         tile_size: Size of one tile, in pixels.
+        offset: Pixel position (x, y) of the maze's top-left corner on
+            the canvas.
     """
+    ox, oy = offset
     pacgum_size = tile_size // 6
     pacgum_color: Color = (255, 255, 224)
     supergum_size = tile_size // 3
     supergum_color: Color = (255, 205, 155)
     for (x, y) in level.pacgums:
-        center_x = x * tile_size + tile_size // 2
-        center_y = y * tile_size + tile_size // 2
+        center_x = ox + x * tile_size + tile_size // 2
+        center_y = oy + y * tile_size + tile_size // 2
         canvas.draw_rect(center_x - pacgum_size // 2,
                          center_y - pacgum_size // 2,
                          pacgum_size, pacgum_size, pacgum_color)
     for (x, y) in level.super_pacgums:
-        center_x = x * tile_size + tile_size // 2
-        center_y = y * tile_size + tile_size // 2
+        center_x = ox + x * tile_size + tile_size // 2
+        center_y = oy + y * tile_size + tile_size // 2
         canvas.draw_rect(center_x - supergum_size // 2,
                          center_y - supergum_size // 2,
                          supergum_size, supergum_size, supergum_color)
 
 
-def draw_player(canvas: Canvas, player: PlayerData, tile_size: int) -> None:
+def draw_player(canvas: Canvas, player: PlayerData, tile_size: int,
+                offset: tuple[int, int] = (0, 0)) -> None:
     """
     Draw the player on the canvas.
 
@@ -74,17 +83,20 @@ def draw_player(canvas: Canvas, player: PlayerData, tile_size: int) -> None:
         canvas: Canvas to draw on.
         player: Player providing the position and direction.
         tile_size: Size of one tile, in pixels.
+        offset: Pixel position (x, y) of the maze's top-left corner on
+            the canvas.
     """
+    ox, oy = offset
     x, y = player.position
     state = "open" if (x + y) % 2 == 0 else "closed"
     path = (f"src/ui/assets/pacman_{state}"
             f"_{player.direction.name.lower()}.png")
     canvas.draw_image(canvas.load_image(path, tile_size),
-                      x * tile_size, y * tile_size)
+                      ox + x * tile_size, oy + y * tile_size)
 
 
 def draw_ghosts(canvas: Canvas, ghosts: list[GhostData],
-                tile_size: int) -> None:
+                tile_size: int, offset: tuple[int, int] = (0, 0)) -> None:
     """
     Draw the ghosts on the canvas.
 
@@ -96,7 +108,10 @@ def draw_ghosts(canvas: Canvas, ghosts: list[GhostData],
         canvas: Canvas to draw on.
         ghosts: Ghosts providing the position, direction, state and color.
         tile_size: Size of one tile, in pixels.
+        offset: Pixel position (x, y) of the maze's top-left corner on
+            the canvas.
     """
+    ox, oy = offset
     for ghost in ghosts:
         if ghost.state == GhostState.SCARED:
             variant = "scared"
@@ -108,4 +123,4 @@ def draw_ghosts(canvas: Canvas, ghosts: list[GhostData],
                 f"_{ghost.direction.name.lower()}.png")
         x, y = ghost.position
         canvas.draw_image(canvas.load_image(path, tile_size),
-                          x * tile_size, y * tile_size)
+                          ox + x * tile_size, oy + y * tile_size)
