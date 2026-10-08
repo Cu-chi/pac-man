@@ -3,7 +3,7 @@ SRC = src
 MYPY_FLAGS = --warn-return-any --warn-unused-ignores --ignore-missing-imports \
 --disallow-untyped-defs --check-untyped-defs
 VENV = .venv
-CONFIG = config.json
+CONFIG = src/config.json
 
 install:
 	uv sync
