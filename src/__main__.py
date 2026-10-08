@@ -105,6 +105,10 @@ class App():
                 self.end_screen.victory = False
                 self.end_screen.score = self.game_controller.state.player.score
                 self.screen = Screen.END
+            elif self.game_controller.state.phase == GamePhase.VICTORY:
+                self.end_screen.victory = True
+                self.end_screen.score = self.game_controller.state.player.score
+                self.screen = Screen.END
         elif self.screen == Screen.PAUSED:
             self.pause.draw(self.canvas)
         elif self.screen == Screen.END:
