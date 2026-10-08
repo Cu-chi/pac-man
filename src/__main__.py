@@ -78,6 +78,7 @@ class App():
                         score=self.end_screen.score
                     )
                 )
+                self.end_screen.name = ""
                 self._refresh_highscores()
                 self.screen = Screen.MENU
 
