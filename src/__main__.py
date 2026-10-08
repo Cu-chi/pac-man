@@ -77,11 +77,17 @@ class App():
         elif self.screen == Screen.PLAYING:
             level = self.game_controller.state.level
             tsize = self.tile_size
-            draw_maze(self.canvas, level, tsize)
-            draw_pacgum(self.canvas, level, tsize)
+            offset = (
+                (self.canvas.width - level.width * tsize) // 2,
+                (self.canvas.height - HUD_HEIGHT - level.height * tsize) // 2
+            )
+            draw_maze(self.canvas, level, tsize, offset)
+            draw_pacgum(self.canvas, level, tsize, offset)
             draw_hud(self.canvas, self.game_controller.state)
-            draw_player(self.canvas, self.game_controller.state.player, tsize)
-            draw_ghosts(self.canvas, self.game_controller.state.ghosts, tsize)
+            draw_player(self.canvas, self.game_controller.state.player, tsize,
+                        offset)
+            draw_ghosts(self.canvas, self.game_controller.state.ghosts, tsize,
+                        offset)
             self.game_controller.update(dt)
         elif self.screen == Screen.PAUSED:
             self.pause.draw(self.canvas)
