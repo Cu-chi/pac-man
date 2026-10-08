@@ -97,7 +97,7 @@ class App():
             self.renderer.draw(self.game_controller.state)
             draw_hud(self.canvas, self.game_controller.state)
             if self.game_controller.state.phase == GamePhase.LEVEL_COMPLETED:
-                draw_level_complete(self.canvas, self.G)
+                draw_level_complete(self.canvas, self.game_controller.state)
             self.game_controller.update(dt)
             if self.game_controller.state.phase == GamePhase.GAME_OVER:
                 self.end_screen.victory = False
