@@ -1,6 +1,6 @@
 import sys
 from ui.screens import HUD_HEIGHT
-from models import Configuration, GamePhase, GameEvent
+from models import Configuration, GamePhase
 from pydantic import ValidationError
 from configuration import load_config
 from highscores import Highscores, Score
