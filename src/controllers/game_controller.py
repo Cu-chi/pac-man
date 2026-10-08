@@ -108,6 +108,9 @@ class GameController:
                 self.state.phase = GamePhase.PAUSED
                 return self.state.phase
             self._player_controller.handle_key(event)
+        elif self.state.phase == GamePhase.LEVEL_COMPLETED:
+            if event.key == Key.SPACE:
+                self.load_next_level()
 
     def _update_timers(self, dt: float) -> None:
         """Update level time limit and ghost scared duration."""
@@ -191,9 +194,13 @@ class GameController:
 
     def _check_game_status(self) -> None:
         """Check victory conditions."""
-        if not self.state.level.pacgums \
-           and not self.state.level.super_pacgums:
-            self.load_next_level()
-        elif self.state.cheats.skip_level:
+        level_cleared = not self.state.level.pacgums \
+            and not self.state.level.super_pacgums
+        if self.state.cheats.skip_level:
             self.state.cheats.skip_level = False
-            self.load_next_level()
+            level_cleared = True
+        if level_cleared:
+            if self._level_index + 1 >= self._total_levels:
+                self.state.phase = GamePhase.VICTORY
+            else:
+                self.state.phase = GamePhase.LEVEL_COMPLETED

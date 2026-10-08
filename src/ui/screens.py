@@ -37,6 +37,29 @@ def draw_hud(canvas: Canvas, state: GameState) -> None:
         canvas.draw_text(text, x, y, HUD_COLOR, size=22, centered=True)
 
 
+def draw_level_complete(canvas: Canvas, state: GameState) -> None:
+    """
+    Draw the level complete box on top of the game view.
+
+    Args:
+        canvas: Canvas to draw on.
+        state: Game state providing the cleared level and the score.
+    """
+    box_w, box_h = 360, 190
+    box_x = (canvas.width - box_w) // 2
+    box_y = (canvas.height - box_h) // 2
+    canvas.draw_rect(box_x, box_y, box_w, box_h, (0, 0, 0))
+    canvas.draw_rect(box_x, box_y, box_w, box_h, TITLE_COLOR,
+                     filled=False)
+    canvas.draw_text(f"LEVEL {state.level_index + 1} CLEAR!",
+                     canvas.width // 2, box_y + 40, TITLE_COLOR,
+                     size=44, centered=True)
+    canvas.draw_text(f"Score: {state.player.score}", canvas.width // 2,
+                     box_y + 95, OPTION_COLOR, size=32, centered=True)
+    canvas.draw_text("Press SPACE to continue", canvas.width // 2,
+                     box_y + 150, SELECTED_COLOR, size=26, centered=True)
+
+
 class PauseAction(Enum):
     """Outcomes the pause menu can hand back to its caller."""
 
