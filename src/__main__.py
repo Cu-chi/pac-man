@@ -36,6 +36,7 @@ class App():
         self.screen = Screen.MENU
         self.pause = PauseMenu()
         self.menu = Menu()
+        self.end_screen = EndScreen(victory=False, score=0)
         self.game_controller: GameController | None = None
         self._refresh_highscores()
         self._create_game()
@@ -69,6 +70,16 @@ class App():
                 self.game_controller.resume()
             elif action == PauseAction.MAIN_MENU:
                 self.screen = Screen.MENU
+        elif self.screen == Screen.END:
+            if self.end_screen.handle_key(event) is not None:
+                self.highscores.score.append(
+                    Score(
+                        username=self.end_screen.name,
+                        score=self.end_screen.score
+                    )
+                )
+                self._refresh_highscores()
+                self.screen = Screen.MENU
 
     def on_frame(self, dt: float) -> None:
         self.canvas.clear()
@@ -89,8 +100,14 @@ class App():
             draw_ghosts(self.canvas, self.game_controller.state.ghosts, tsize,
                         offset)
             self.game_controller.update(dt)
+            if self.game_controller.state.phase == GamePhase.GAME_OVER:
+                self.end_screen.victory = False
+                self.end_screen.score = self.game_controller.state.player.score
+                self.screen = Screen.END
         elif self.screen == Screen.PAUSED:
             self.pause.draw(self.canvas)
+        elif self.screen == Screen.END:
+            self.end_screen.draw(self.canvas)
 
 
 def main() -> None:
