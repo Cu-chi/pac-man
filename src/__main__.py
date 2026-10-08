@@ -1,13 +1,13 @@
 import sys
 from ui.screens import HUD_HEIGHT
-from models import Configuration, GamePhase
+from models import Configuration, GamePhase, GameEvent
 from pydantic import ValidationError
 from configuration import load_config
-from highscores import Highscores
+from highscores import Highscores, Score
 from ui import (Canvas, Menu, MenuAction,
                 Event, draw_hud, draw_ghosts,
                 draw_maze, draw_pacgum, draw_player,
-                PauseAction, PauseMenu)
+                PauseAction, PauseMenu, EndScreen)
 from pathlib import Path
 from enum import Enum, auto
 from levels_generator import LevelsGenerator
