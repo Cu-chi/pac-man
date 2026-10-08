@@ -6,7 +6,8 @@ from configuration import load_config
 from highscores import Highscores, Score
 from ui import (Canvas, Menu, MenuAction,
                 Event, draw_hud, Renderer,
-                PauseAction, PauseMenu, EndScreen)
+                PauseAction, PauseMenu, EndScreen,
+                draw_level_complete)
 from pathlib import Path
 from enum import Enum, auto
 from levels_generator import LevelsGenerator
@@ -95,6 +96,8 @@ class App():
         elif self.screen == Screen.PLAYING:
             self.renderer.draw(self.game_controller.state)
             draw_hud(self.canvas, self.game_controller.state)
+            if self.game_controller.state.phase == GamePhase.LEVEL_COMPLETED:
+                draw_level_complete(self.canvas, self.G)
             self.game_controller.update(dt)
             if self.game_controller.state.phase == GamePhase.GAME_OVER:
                 self.end_screen.victory = False
