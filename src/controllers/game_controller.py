@@ -88,6 +88,7 @@ class GameController:
 
         self._update_timers(dt)
 
+        self._player_controller.set_noclip(self.state.cheats.noclip)
         self._player_controller.update(dt)
         for g_ctrl in self._ghosts_controllers:
             g_ctrl.update(dt, self.state.cheats.ghosts_freeze)

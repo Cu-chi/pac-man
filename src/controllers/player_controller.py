@@ -9,7 +9,11 @@ class PlayerController(BaseEntityController[PlayerData]):
     def __init__(
         self, player_data: PlayerData, level: Level, speed: float = 6.0
     ) -> None:
+        self._noclip = False
         super().__init__(player_data, level, speed)
+
+    def set_noclip(self, state: bool) -> None:
+        self._noclip = state
 
     def handle_key(self, event: Event) -> None:
         """Handle keyboard inputs for player direction.
@@ -39,6 +43,14 @@ class PlayerController(BaseEntityController[PlayerData]):
                 self._entity.next_direction = Direction.LEFT
             case "d":
                 self._entity.next_direction = Direction.RIGHT
+
+    def _can_move(self, direction: Direction) -> bool:
+        if self._noclip:
+            dx, dy, _ = direction.value
+            cx, cy = self._entity.position
+            return (0 <= cx + dx < self._level.width
+                    and 0 <= cy + dy < self._level.height)
+        return super()._can_move(direction)
 
     def _choose_direction(self) -> Direction | None:
         """Return and clear the buffered player direction.
