@@ -8,6 +8,7 @@ MENU_OPTIONS = ["Start Game", "Instructions", "View Highscores",
 TITLE_COLOR = (255, 205, 155)
 OPTION_COLOR = (255, 255, 224)
 SELECTED_COLOR = (255, 255, 0)
+MAX_HIGHSCORE = 10
 INSTRUCTIONS_TEXT = [
     "Move with the arrow keys or WASD",
     "To finish the level, eat every pacgums",
@@ -125,10 +126,14 @@ class Menu:
         Args:
             canvas: Canvas to draw on.
         """
-        line_height = 50
+        title_area = 120
+        bottom_margin = 30
+        available = canvas.height - title_area - bottom_margin
+        line_height = min(50, available // MAX_HIGHSCORE)
+        font_size = max(12, int(line_height * 0.56))
         block_height = len(self.highscore) * line_height
-        start_y = (canvas.height - block_height) // 2
-        canvas.draw_text("HIGHSCORES", canvas.width // 2, start_y - 60,
+        start_y = title_area + (available - block_height)
+        canvas.draw_text("HIGHSCORES", canvas.width // 2, title_area // 2,
                          TITLE_COLOR, size=64, centered=True)
         if not self.highscore:
             canvas.draw_text("No scores yet", canvas.width // 2,
@@ -138,7 +143,7 @@ class Menu:
             line = f"{index + 1}. {name}: {score}"
             y = start_y + index * line_height + line_height // 2
             canvas.draw_text(line, canvas.width // 2, y, OPTION_COLOR,
-                             size=28, centered=True)
+                             size=font_size, centered=True)
 
     def _draw_instruction(self, canvas: Canvas) -> None:
         """
