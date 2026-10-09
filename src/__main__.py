@@ -1,5 +1,6 @@
 import sys
 from ui.screens import HUD_HEIGHT
+from ui.menu import MAX_HIGHSCORE
 from models import Configuration, GamePhase
 from pydantic import ValidationError
 from configuration import load_config
@@ -50,7 +51,7 @@ class App():
     def _refresh_highscores(self) -> None:
         ranked = sorted(self.highscores.score, key=lambda s: s.score,
                         reverse=True)
-        top = ranked[:10]
+        top = ranked[:MAX_HIGHSCORE]
         self.menu.highscore = [(s.username, s.score) for s in top]
 
     def _create_game(self) -> None:
@@ -124,7 +125,7 @@ def main() -> None:
     window_height = max(level.height
                         for level in config.levels) * TILE_SIZE + HUD_HEIGHT
 
-    with Canvas(window_width, window_height, "PAC-MAN") as canvas:
+    with Canvas(window_width, window_height - 200, "PAC-MAN") as canvas:
         app = App(canvas, config)
         canvas.key_hook(app.on_key)
         canvas.loop_hook(app.on_frame)
