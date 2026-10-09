@@ -3,7 +3,7 @@ from ui.screens import HUD_HEIGHT
 from ui.menu import MAX_HIGHSCORE
 from models import Configuration, GamePhase
 from pydantic import ValidationError
-from configuration import load_config
+from configuration import ConfigLoader
 from highscores import Highscores, Score
 from ui import (Canvas, Menu, MenuAction,
                 Event, draw_hud, Renderer,
@@ -118,7 +118,7 @@ def main() -> None:
     if len(sys.argv) != 2:
         print("Error: no configuration file given.", file=sys.stderr)
         sys.exit(1)
-    config = load_config(sys.argv[1])
+    config = ConfigLoader(sys.argv[1]).load()
 
     maze_width = max(level.width for level in config.levels) * TILE_SIZE
     window_width = max(MIN_WINDOW_WIDTH, maze_width)
