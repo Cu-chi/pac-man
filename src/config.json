@@ -1,0 +1,27 @@
+{
+    # Save file for high scores
+    "highscore_filename": "highscores.json",
+
+    # Gameplay settings
+    "lives": 3,
+    "level_max_time": 180,
+    "seed": 42,
+
+    # Speeds (in tiles per second)
+    "player_speed": 6.5,
+    "ghost_speed": 5.0,
+    "ghost_scared_multiplier": 0.6,
+
+    # Ghost timers
+    "ghost_scared_timer": 10.0,
+    "ghost_respawn_timer": 10.0,
+
+    # Scoring
+    "points_per_pacgum": 10,
+    "points_per_super_pacgum": 50,
+    "points_per_ghost": 200,
+
+    # Level size
+    "height": 15,
+    "width": 15
+}

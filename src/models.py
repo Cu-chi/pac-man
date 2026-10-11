@@ -16,8 +16,8 @@ class LevelConfig(BaseModel):
 class Configuration(BaseModel):
 
     highscore_filename: str = "highscores.json"
-    levels: list[LevelConfig] = Field(
-        default_factory=lambda: [LevelConfig() for _ in range(10)])
+    height: int = Field(default=10, ge=5)
+    width: int = Field(default=10, ge=5)
     lives: int = Field(default=3, ge=1)
     points_per_pacgum: int = Field(default=10, ge=0)
     points_per_super_pacgum: int = Field(default=50, ge=0)
@@ -29,6 +29,13 @@ class Configuration(BaseModel):
     ghost_scared_timer: float = Field(default=10.0, ge=3.0)
     ghost_respawn_timer: float = Field(default=10.0, ge=3.0)
     ghost_scared_multiplier: float = Field(default=0.75, ge=0.0, le=2.0)
+
+    @property
+    def levels(self) -> list[LevelConfig]:
+        return [
+            LevelConfig(width=self.width, height=self.height)
+            for _ in range(10)
+        ]
 
     @model_validator(mode="before")
     @classmethod
