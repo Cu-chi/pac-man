@@ -131,6 +131,7 @@ class Cheats():
     invincible: bool = False
     ghosts_freeze: bool = False
     skip_level: bool = False
+    noclip: bool = False
 
 
 class GamePhase(Enum):
