@@ -1,3 +1,5 @@
+"""User interface: canvas, menus, screens and renderer."""
+
 from ui.canvas import Canvas
 from ui.events import Event, EventType, Key
 from ui.menu import Menu, MenuAction, ScreenMenu

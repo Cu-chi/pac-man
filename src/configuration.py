@@ -1,3 +1,5 @@
+"""Loading of the JSON configuration file, with # comments."""
+
 import sys
 from pydantic import ValidationError
 from models import Configuration

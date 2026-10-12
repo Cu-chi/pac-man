@@ -1,10 +1,12 @@
+"""Level generation on top of the assigned A-Maze-ing package."""
+
 from mazegenerator import MazeGenerator
 from models import Configuration, Level
 import random
 
 
 class SpawnNotFoundException(Exception):
-    pass
+    """Raised when no free cell is found near the maze center."""
 
 
 class LevelsGenerator:
@@ -16,7 +18,7 @@ class LevelsGenerator:
         Each level has its data using the Level model.
 
         Args:
-            config (Configuration): The configuration
+            config (Configuration): The configuration.
         """
         self.levels: list[Level] = []
         for i, level in enumerate(config.levels):
