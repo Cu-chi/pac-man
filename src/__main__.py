@@ -57,7 +57,7 @@ class App():
         self.menu = Menu()
         self.end_screen = EndScreen(victory=False, score=0)
         self._refresh_highscores()
-        self.game_controller: GameController = self._create_game()
+        self.game_controller: GameController
 
     def _refresh_highscores(self) -> None:
         """Copy the best highscores, sorted, into the main menu."""
@@ -84,13 +84,23 @@ class App():
             print(f"Warning: could not save highscores: {e}",
                   file=sys.stderr)
 
-    def _create_game(self) -> GameController:
+    def _create_game(self) -> GameController | None:
         """Generate fresh levels and create a new game controller.
 
+        On failure, the error is logged and shown on the main menu.
+
         Returns:
-            GameController: Controller of the new game.
+            GameController | None: Controller of the new game, or None if
+                the levels could not be generated.
         """
-        levels_gen = LevelsGenerator(self.config)
+        try:
+            levels_gen = LevelsGenerator(self.config)
+        except Exception as e:
+            msg = str(e) or type(e).__name__
+            print(f"Error: level generation failed: {msg}", file=sys.stderr)
+            self.menu.error = f"Generation failed: {msg}"
+            return None
+        self.menu.error = None
         return GameController(levels_gen, self.config)
 
     def on_key(self, event: Event) -> None:
@@ -104,8 +114,10 @@ class App():
             if menu_action == MenuAction.EXIT:
                 self.canvas.loop_exit()
             elif menu_action == MenuAction.START_GAME:
-                self.game_controller = self._create_game()
-                self.screen = Screen.PLAYING
+                controller = self._create_game()
+                if controller is not None:
+                    self.game_controller = controller
+                    self.screen = Screen.PLAYING
         elif self.screen == Screen.PLAYING:
             phase = self.game_controller.handle_key(event)
             if phase == GamePhase.PAUSED:
