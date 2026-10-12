@@ -1,3 +1,5 @@
+"""Keyboard events, independent from pygame."""
+
 from enum import Enum, auto
 from dataclasses import dataclass
 

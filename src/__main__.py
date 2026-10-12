@@ -1,3 +1,5 @@
+"""Entry point of the Pac-Man game: parses arguments and runs the app."""
+
 import sys
 from ui.menu import MAX_HIGHSCORE
 from models import Configuration, GamePhase
@@ -16,6 +18,8 @@ from constants import TILE_SIZE, MAX_WINDOW, MIN_WINDOW, HUD_HEIGHT
 
 
 class Screen(Enum):
+    """Top-level screens the application can display."""
+
     MENU = auto()
     PLAYING = auto()
     PAUSED = auto()
@@ -23,9 +27,21 @@ class Screen(Enum):
 
 
 class App():
+    """Glue between the canvas, the menus and the game controller.
+
+    Routes key events and frame updates to the active screen and handles
+    transitions between them (menu, game, pause, end screen).
+    """
 
     def __init__(self, canvas: Canvas, config: Configuration,
                  tile_size: int = TILE_SIZE) -> None:
+        """Initialize the application and load the highscores.
+
+        Args:
+            canvas (Canvas): Canvas to draw on.
+            config (Configuration): Validated game configuration.
+            tile_size (int): Size of one maze tile, in pixels.
+        """
         self.canvas = canvas
         self.config = config
         try:
@@ -40,39 +56,49 @@ class App():
         self.pause = PauseMenu()
         self.menu = Menu()
         self.end_screen = EndScreen(victory=False, score=0)
-        self.game_controller: GameController | None = None
         self._refresh_highscores()
-        self._create_game()
+        self.game_controller: GameController = self._create_game()
 
     def _refresh_highscores(self) -> None:
+        """Copy the best highscores, sorted, into the main menu."""
         ranked = sorted(self.highscores.score, key=lambda s: s.score,
                         reverse=True)
         top = ranked[:MAX_HIGHSCORE]
         self.menu.highscore = [(s.username, s.score) for s in top]
 
-    def _create_game(self) -> None:
-        self.levels_gen = LevelsGenerator(self.config)
-        self.game_controller = GameController(self.levels_gen, self.config)
+    def _create_game(self) -> GameController:
+        """Generate fresh levels and create a new game controller.
+
+        Returns:
+            GameController: Controller of the new game.
+        """
+        levels_gen = LevelsGenerator(self.config)
+        return GameController(levels_gen, self.config)
 
     def on_key(self, event: Event) -> None:
+        """Dispatch a key event to the active screen.
+
+        Args:
+            event (Event): Key event to handle.
+        """
         if self.screen == Screen.MENU:
-            action = self.menu.handle_key(event)
-            if action == MenuAction.EXIT:
+            menu_action = self.menu.handle_key(event)
+            if menu_action == MenuAction.EXIT:
                 self.canvas.loop_exit()
-            elif action == MenuAction.START_GAME:
-                self._create_game()
+            elif menu_action == MenuAction.START_GAME:
+                self.game_controller = self._create_game()
                 self.screen = Screen.PLAYING
         elif self.screen == Screen.PLAYING:
-            action = self.game_controller.handle_key(event)
-            if action == GamePhase.PAUSED:
+            phase = self.game_controller.handle_key(event)
+            if phase == GamePhase.PAUSED:
                 self.screen = Screen.PAUSED
         elif self.screen == Screen.PAUSED:
-            action = self.pause.handle_key(event,
-                                           self.game_controller.state.cheats)
-            if action == PauseAction.RESUME:
+            pause_action = self.pause.handle_key(
+                event, self.game_controller.state.cheats)
+            if pause_action == PauseAction.RESUME:
                 self.screen = Screen.PLAYING
                 self.game_controller.resume()
-            elif action == PauseAction.MAIN_MENU:
+            elif pause_action == PauseAction.MAIN_MENU:
                 self.screen = Screen.MENU
         elif self.screen == Screen.END:
             if self.end_screen.handle_key(event) is not None:
@@ -88,6 +114,11 @@ class App():
                 self.screen = Screen.MENU
 
     def on_frame(self, dt: float) -> None:
+        """Update the game logic and draw the active screen.
+
+        Args:
+            dt (float): Elapsed time since the previous frame, in seconds.
+        """
         self.canvas.clear()
         if self.screen == Screen.MENU:
             self.menu.draw(self.canvas)
@@ -112,6 +143,7 @@ class App():
 
 
 def main() -> None:
+    """Load the configuration given on the command line and run the game."""
     if len(sys.argv) != 2:
         print("Error: no configuration file given.", file=sys.stderr)
         sys.exit(1)
@@ -135,6 +167,9 @@ def main() -> None:
             canvas.loop()
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("Error: Keyboard interruption", file=sys.stderr)
         sys.exit(1)
 
 

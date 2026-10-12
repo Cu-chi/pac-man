@@ -1,3 +1,5 @@
+"""Ghost controller: BFS chase, random flee and return to spawn."""
+
 from controllers.base_controller import BaseEntityController
 from models import GhostData, Level, Direction, PlayerData, GhostState
 from collections import deque
@@ -18,6 +20,15 @@ class GhostController(BaseEntityController[GhostData]):
     def __init__(self, ghost_data: GhostData, level: Level,
                  player_data: PlayerData, speed: float = 5.0,
                  scared_speed_multiplier: float = 0.75) -> None:
+        """Initialize the ghost controller.
+
+        Args:
+            ghost_data (GhostData): Ghost to control.
+            level (Level): Level where the ghost evolves.
+            player_data (PlayerData): Player to chase.
+            speed (float): Base speed, in tiles per second.
+            scared_speed_multiplier (float): Speed factor while scared.
+        """
         super().__init__(ghost_data, level, speed)
         self._player_data = player_data
         self._scared_speed_multiplier = scared_speed_multiplier
@@ -28,8 +39,8 @@ class GhostController(BaseEntityController[GhostData]):
 
         Args:
             dt (float): Elapsed time since last frame in seconds.
+            freeze (bool): Stop the ghost when True (cheat).
         """
-
         match self._entity.state:
             case GhostState.SCARED:
                 self.speed = self._base_speed * self._scared_speed_multiplier
@@ -44,7 +55,11 @@ class GhostController(BaseEntityController[GhostData]):
         super().update(dt)
 
     def _choose_direction(self) -> Direction | None:
-        """Choose the direction using BFS."""
+        """Choose the direction using BFS, or randomly when scared.
+
+        Returns:
+            Direction | None: Next direction, None if the ghost is stuck.
+        """
         reachables = [d for d in Direction if self._can_move(d)]
         if not reachables:
             return None
@@ -93,7 +108,7 @@ class GhostController(BaseEntityController[GhostData]):
         return valids[0]
 
     def _get_target(self) -> tuple[int, int]:
-        """Get target according to current GhostState
+        """Get target according to current GhostState.
 
         Returns:
             tuple[int, int]: Target coords

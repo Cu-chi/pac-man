@@ -1,3 +1,5 @@
+"""Main menu with highscores and instructions sub-screens."""
+
 from ui.canvas import Canvas
 from dataclasses import dataclass, field
 from enum import Enum, auto

@@ -1,3 +1,5 @@
+"""Rendering of the maze, pacgums, player and ghosts."""
+
 from models import (Level, Direction, PlayerData, GhostData, GhostState,
                     GameState)
 from ui.canvas import Canvas, Color

@@ -1,3 +1,5 @@
+"""HUD, pause menu, level complete and end screens."""
+
 from ui.canvas import Canvas, Color
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -89,9 +91,10 @@ DEFAULT_PAUSE_OPTIONS: list[MenuOption] = [
 @dataclass(slots=True, kw_only=True)
 class PauseMenu:
     """
-    Pause menu: lets the player resume or go back to the main menu.
+    Pause menu: resume, go back to the main menu or toggle cheats.
 
     Attributes:
+        options: Entries of the menu, actions and cheats.
         selected: Index of the highlighted option.
     """
 
@@ -102,10 +105,12 @@ class PauseMenu:
     def handle_key(self, event: Event, cheats: Cheats) -> PauseAction | None:
         """Update the pause menu in response to a key press.
 
-        ESCAPE resumes the game directly.
+        ESCAPE resumes the game directly. ENTER on a cheat toggles it, or
+        triggers it and resumes the game for one-shot cheats.
 
         Args:
             event: Key event to react to.
+            cheats: Cheats of the current game, updated in place.
 
         Returns:
             The action to perform, or None while the player is still
@@ -139,6 +144,7 @@ class PauseMenu:
 
         Args:
             canvas: Canvas to draw on.
+            cheats: Cheats of the current game, to show their state.
         """
         line_height = 36
         box_w, box_h = 340, 90 + (len(self.options) + 1) * line_height
@@ -188,8 +194,8 @@ class EndScreen:
             event: Key event to react to.
 
         Returns:
-            The confirmed name once ENTER is pressed with a non-empty
-            name, None otherwise.
+            The confirmed name once ENTER is pressed with a name of at
+            least 3 characters, None otherwise.
         """
         if event.type != EventType.KEY_DOWN:
             return None

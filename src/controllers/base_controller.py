@@ -1,3 +1,5 @@
+"""Base controller handling grid movement of entities."""
+
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 from models import Entity, Level, Direction

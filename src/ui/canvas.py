@@ -1,3 +1,5 @@
+"""MLX-like drawing and event wrapper around pygame."""
+
 import pygame
 import time
 from ui.events import Key, EventType, Event

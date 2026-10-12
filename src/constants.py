@@ -1,3 +1,5 @@
+"""Display constants shared across the game."""
+
 TILE_SIZE = 32
 MIN_TILE_SIZE = 16
 MIN_WINDOW = (600, 400)

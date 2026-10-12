@@ -1,3 +1,5 @@
+"""Game controller: rules, collisions and level progression."""
+
 from models import (
     GameState, GamePhase,
     GhostState, Direction,
@@ -17,6 +19,12 @@ class GameController:
         levels_gen: LevelsGenerator,
         config: Configuration
     ) -> None:
+        """Initialize the game on its first level.
+
+        Args:
+            levels_gen (LevelsGenerator): Generator holding every level.
+            config (Configuration): Validated game configuration.
+        """
         self._levels_gen = levels_gen
         self._config = config
 
@@ -29,6 +37,16 @@ class GameController:
     def _create_game_state(self, index: int,
                            old_player_data: PlayerData | None = None) \
             -> GameState:
+        """Create the state of a level, keeping the previous player stats.
+
+        Args:
+            index (int): Index of the level to load.
+            old_player_data (PlayerData | None): Player of the previous
+                level, whose lives and score are kept.
+
+        Returns:
+            GameState: State of the new level.
+        """
         current_level = self._levels_gen.levels[index]
 
         player_data = PlayerData(
@@ -65,6 +83,7 @@ class GameController:
         )
 
     def _init_controllers(self) -> None:
+        """Create the player and ghost controllers for the current state."""
         self._player_controller = PlayerController(
             player_data=self.state.player,
             level=self.state.level,
@@ -82,7 +101,11 @@ class GameController:
         ]
 
     def update(self, dt: float) -> None:
-        """Run one logic frame."""
+        """Run one logic frame.
+
+        Args:
+            dt (float): Elapsed time since the previous frame, in seconds.
+        """
         if self.state.phase != GamePhase.PLAYING:
             return
 
@@ -98,11 +121,21 @@ class GameController:
         self._check_game_status()
 
     def resume(self) -> None:
+        """Resume the game after a pause."""
         self.state.phase = GamePhase.PLAYING
 
-    def handle_key(self, event: Event) -> GamePhase:
+    def handle_key(self, event: Event) -> GamePhase | None:
+        """Handle a key press during the game.
+
+        Args:
+            event (Event): Key event to handle.
+
+        Returns:
+            GamePhase | None: PAUSED when the game was paused, None
+                otherwise.
+        """
         if event.type != EventType.KEY_DOWN:
-            return
+            return None
 
         if self.state.phase == GamePhase.PLAYING:
             if event.key == Key.ESCAPE:
@@ -112,9 +145,14 @@ class GameController:
         elif self.state.phase == GamePhase.LEVEL_COMPLETED:
             if event.key == Key.SPACE:
                 self.load_next_level()
+        return None
 
     def _update_timers(self, dt: float) -> None:
-        """Update level time limit and ghost scared duration."""
+        """Update level time limit and ghost scared duration.
+
+        Args:
+            dt (float): Elapsed time since the previous frame, in seconds.
+        """
         self.state.time_left -= dt
         if self.state.time_left <= 0:
             self.state.phase = GamePhase.GAME_OVER

@@ -1,20 +1,28 @@
+"""Data models: configuration, level, entities and game state."""
+
 import sys
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any, Self
 from pydantic import BaseModel, Field, field_validator, ValidationInfo, \
-    ValidationError, model_validator
+    ValidationError, model_validator, ValidatorFunctionWrapHandler
 from pydantic.fields import FieldInfo
 from constants import MAX_MAZE_WIDTH, MAX_MAZE_HEIGHT
 
 
 class LevelConfig(BaseModel):
+    """Size of a single level, in tiles."""
 
     width: int = Field(default=10, ge=5, le=MAX_MAZE_WIDTH)
     height: int = Field(default=10, ge=5, le=MAX_MAZE_HEIGHT)
 
 
 class Configuration(BaseModel):
+    """Game configuration loaded from the JSON file.
+
+    Invalid values fall back to their default with a warning, missing keys
+    are reported and unknown keys are ignored.
+    """
 
     highscore_filename: str = "highscores.json"
     height: int = Field(default=10, ge=5, le=MAX_MAZE_HEIGHT)
@@ -33,6 +41,11 @@ class Configuration(BaseModel):
 
     @property
     def levels(self) -> list[LevelConfig]:
+        """Build the configuration of the 10 levels of a game.
+
+        Returns:
+            list[LevelConfig]: One entry per level, all the same size.
+        """
         return [
             LevelConfig(width=self.width, height=self.height)
             for _ in range(10)
@@ -40,7 +53,15 @@ class Configuration(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def warn_on_missing_fields(cls, data: Any) -> dict:
+    def warn_on_missing_fields(cls, data: Any) -> Any:
+        """Warn about every missing key before validation.
+
+        Args:
+            data (Any): Raw data being validated.
+
+        Returns:
+            Any: The data, unchanged.
+        """
         if isinstance(data, dict):
             for field_name, field_info in cls.model_fields.items():
                 if field_name not in data:
@@ -51,6 +72,11 @@ class Configuration(BaseModel):
 
     @model_validator(mode="after")
     def pad_levels(self) -> Self:
+        """Ensure the game has at least 10 levels.
+
+        Returns:
+            Self: The validated configuration.
+        """
         if len(self.levels) < 10:
             print(f"Warning: config has only {len(self.levels)} levels, "
                   f"padding to 10 with defaults.", file=sys.stderr)
@@ -60,8 +86,22 @@ class Configuration(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def fallback_to_default_on_error(cls, value: Any, handler,
+    def fallback_to_default_on_error(cls, value: Any,
+                                     handler: ValidatorFunctionWrapHandler,
                                      info: ValidationInfo) -> Any:
+        """Validate a field, falling back to its default when invalid.
+
+        Args:
+            value (Any): Raw value of the field.
+            handler (ValidatorFunctionWrapHandler): Standard validator.
+            info (ValidationInfo): Information about the field.
+
+        Raises:
+            ValidationError: If the value is invalid and has no default.
+
+        Returns:
+            Any: The validated value, or the default one.
+        """
         try:
             return handler(value)
         except ValidationError as exc:
@@ -83,6 +123,7 @@ class Configuration(BaseModel):
 
 
 class Direction(Enum):
+    """Movement directions, as (dx, dy, wall bit) tuples."""
 
     UP = (0, -1, 1)
     RIGHT = (1, 0, 2)
@@ -92,6 +133,7 @@ class Direction(Enum):
 
 @dataclass(slots=True, kw_only=True)
 class Level():
+    """Maze layout, pacgums and spawn points of a level."""
 
     width: int
     height: int
@@ -104,6 +146,7 @@ class Level():
 
 @dataclass(slots=True, kw_only=True)
 class Entity():
+    """Base data of anything moving on the grid."""
 
     position: tuple[int, int]
     direction: Direction
@@ -111,6 +154,7 @@ class Entity():
 
 @dataclass(slots=True, kw_only=True)
 class PlayerData(Entity):
+    """Player data: lives, score and buffered direction."""
 
     lives: int
     score: int
@@ -118,6 +162,7 @@ class PlayerData(Entity):
 
 
 class GhostState(Enum):
+    """Behaviour modes of a ghost."""
 
     CHASE = auto()
     SCARED = auto()
@@ -126,6 +171,7 @@ class GhostState(Enum):
 
 @dataclass(slots=True, kw_only=True)
 class GhostData(Entity):
+    """Ghost data: state, color, respawn timer and spawn point."""
 
     state: GhostState
     color: str
@@ -136,6 +182,8 @@ class GhostData(Entity):
 
 @dataclass(slots=True, kw_only=True)
 class Cheats():
+    """Cheats toggled from the pause menu."""
+
     invincible: bool = False
     ghosts_freeze: bool = False
     skip_level: bool = False
@@ -143,6 +191,7 @@ class Cheats():
 
 
 class GamePhase(Enum):
+    """Phases a game can be in."""
 
     MENU = auto()
     PLAYING = auto()
@@ -153,6 +202,7 @@ class GamePhase(Enum):
 
 
 class GameEvent(Enum):
+    """Notable events raised during a game."""
 
     PACGUM_EATEN = auto()
     GHOST_EATEN = auto()
@@ -162,6 +212,7 @@ class GameEvent(Enum):
 
 @dataclass(slots=True, kw_only=True)
 class GameState():
+    """Full state of a running game."""
 
     player: PlayerData
     ghosts: list[GhostData]
