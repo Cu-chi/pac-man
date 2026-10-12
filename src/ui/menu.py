@@ -10,6 +10,7 @@ MENU_OPTIONS = ["Start Game", "Instructions", "View Highscores",
 TITLE_COLOR = (255, 205, 155)
 OPTION_COLOR = (255, 255, 224)
 SELECTED_COLOR = (255, 255, 0)
+ERROR_COLOR = (255, 80, 80)
 MAX_HIGHSCORE = 10
 INSTRUCTIONS_TEXT = [
     "Move with the arrow keys or WASD",
@@ -44,11 +45,14 @@ class Menu:
         selected: Index of the highlighted option on the main screen.
         highscore: Top scores shown on the highscores screen, as
             (name, score) pairs already sorted best first.
+        error: Message shown under the options when the last game could
+            not be created, or None.
     """
 
     screen: ScreenMenu = ScreenMenu.MAIN
     selected: int = 0
     highscore: list[tuple[str, int]] = field(default_factory=list)
+    error: str | None = None
 
     def handle_key(self, event: Event) -> MenuAction | None:
         """Update the menu in response to a key press.
@@ -120,6 +124,10 @@ class Menu:
             color = SELECTED_COLOR if index == self.selected else OPTION_COLOR
             canvas.draw_text(label, canvas.width // 2, y, color,
                              size=36, centered=True)
+        if self.error:
+            canvas.draw_text(self.error, canvas.width // 2,
+                             start_y + block_height + 40, ERROR_COLOR,
+                             size=20, centered=True)
 
     def _draw_highscore(self, canvas: Canvas) -> None:
         """
