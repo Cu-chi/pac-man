@@ -5,19 +5,20 @@ from typing import Any, Self
 from pydantic import BaseModel, Field, field_validator, ValidationInfo, \
     ValidationError, model_validator
 from pydantic.fields import FieldInfo
+from constants import MAX_MAZE_WIDTH, MAX_MAZE_HEIGHT
 
 
 class LevelConfig(BaseModel):
 
-    width: int = Field(default=10, ge=5)
-    height: int = Field(default=10, ge=5)
+    width: int = Field(default=10, ge=5, le=MAX_MAZE_WIDTH)
+    height: int = Field(default=10, ge=5, le=MAX_MAZE_HEIGHT)
 
 
 class Configuration(BaseModel):
 
     highscore_filename: str = "highscores.json"
-    height: int = Field(default=10, ge=5)
-    width: int = Field(default=10, ge=5)
+    height: int = Field(default=10, ge=5, le=MAX_MAZE_HEIGHT)
+    width: int = Field(default=10, ge=5, le=MAX_MAZE_WIDTH)
     lives: int = Field(default=3, ge=1)
     points_per_pacgum: int = Field(default=10, ge=0)
     points_per_super_pacgum: int = Field(default=50, ge=0)
