@@ -52,6 +52,13 @@ class ConfigLoader:
                 file=sys.stderr,
             )
             sys.exit(1)
+        except UnicodeDecodeError as err:
+            print(
+                f"Warning: '{self._filename}' is not valid UTF-8 ({err}). "
+                f"Using default configuration.",
+                file=sys.stderr,
+            )
+            return "{}"
 
     def _parse_json(self, json_str: str) -> Configuration:
         """Validate JSON string against the Configuration model.
