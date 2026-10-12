@@ -1,5 +1,4 @@
 import sys
-from ui.screens import HUD_HEIGHT
 from ui.menu import MAX_HIGHSCORE
 from models import Configuration, GamePhase
 from pydantic import ValidationError
@@ -13,10 +12,7 @@ from pathlib import Path
 from enum import Enum, auto
 from levels_generator import LevelsGenerator
 from controllers import GameController
-
-
-TILE_SIZE = 32
-MIN_WINDOW_WIDTH = 600
+from constants import TILE_SIZE, MAX_WINDOW, MIN_WINDOW, HUD_HEIGHT
 
 
 class Screen(Enum):
@@ -118,18 +114,27 @@ def main() -> None:
     if len(sys.argv) != 2:
         print("Error: no configuration file given.", file=sys.stderr)
         sys.exit(1)
-    config = ConfigLoader(sys.argv[1]).load()
+    try:
+        config = ConfigLoader(sys.argv[1]).load()
 
-    maze_width = max(level.width for level in config.levels) * TILE_SIZE
-    window_width = max(MIN_WINDOW_WIDTH, maze_width)
-    window_height = max(level.height
-                        for level in config.levels) * TILE_SIZE + HUD_HEIGHT
+        maze_w = config.width
+        maze_h = config.height
 
-    with Canvas(window_width, window_height - 200, "PAC-MAN") as canvas:
-        app = App(canvas, config)
-        canvas.key_hook(app.on_key)
-        canvas.loop_hook(app.on_frame)
-        canvas.loop()
+        tile = min(TILE_SIZE,
+                   MAX_WINDOW[0] // maze_w,
+                   (MAX_WINDOW[1] - HUD_HEIGHT) // maze_h)
+
+        window_w = max(MIN_WINDOW[0], maze_w * tile)
+        window_h = max(MIN_WINDOW[1], maze_h * tile + HUD_HEIGHT)
+
+        with Canvas(window_w, window_h, "PAC-MAN") as canvas:
+            app = App(canvas, config, tile_size=tile)
+            canvas.key_hook(app.on_key)
+            canvas.loop_hook(app.on_frame)
+            canvas.loop()
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
