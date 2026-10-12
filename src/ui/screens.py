@@ -1,15 +1,14 @@
 from ui.canvas import Canvas, Color
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, auto
 from ui.events import Event, EventType, Key
-from models import GameState
+from models import GameState, Cheats
 from constants import HUD_HEIGHT
 
 HUD_COLOR: Color = (255, 255, 255)
 TITLE_COLOR: Color = (255, 205, 155)
 OPTION_COLOR: Color = (255, 255, 224)
 SELECTED_COLOR: Color = (255, 255, 0)
-PAUSE_OPTIONS = ["Resume", "Main Menu"]
 NAME_MAX_LENGTH = 10
 
 
@@ -67,6 +66,26 @@ class PauseAction(Enum):
     MAIN_MENU = auto()
 
 
+@dataclass(slots=True)
+class MenuOption:
+    """Represents a single entry in the pause menu."""
+
+    label: str
+    action: PauseAction | None = None
+    cheat_attr: str | None = None
+    is_trigger: bool = False
+
+
+DEFAULT_PAUSE_OPTIONS: list[MenuOption] = [
+    MenuOption(label="Resume", action=PauseAction.RESUME),
+    MenuOption(label="Main Menu", action=PauseAction.MAIN_MENU),
+    MenuOption(label="Invincible", cheat_attr="invincible"),
+    MenuOption(label="Freeze Ghosts", cheat_attr="ghosts_freeze"),
+    MenuOption(label="Noclip", cheat_attr="noclip"),
+    MenuOption(label="Skip Level", cheat_attr="skip_level", is_trigger=True),
+]
+
+
 @dataclass(slots=True, kw_only=True)
 class PauseMenu:
     """
@@ -76,9 +95,11 @@ class PauseMenu:
         selected: Index of the highlighted option.
     """
 
+    options: list[MenuOption] = field(
+        default_factory=lambda: list(DEFAULT_PAUSE_OPTIONS))
     selected: int = 0
 
-    def handle_key(self, event: Event) -> PauseAction | None:
+    def handle_key(self, event: Event, cheats: Cheats) -> PauseAction | None:
         """Update the pause menu in response to a key press.
 
         ESCAPE resumes the game directly.
@@ -95,23 +116,32 @@ class PauseMenu:
         if event.key == Key.ESCAPE:
             return PauseAction.RESUME
         if event.key == Key.UP:
-            self.selected = (self.selected - 1) % len(PAUSE_OPTIONS)
+            self.selected = (self.selected - 1) % len(self.options)
         elif event.key == Key.DOWN:
-            self.selected = (self.selected + 1) % len(PAUSE_OPTIONS)
+            self.selected = (self.selected + 1) % len(self.options)
         elif event.key == Key.ENTER:
-            if self.selected == 0:
+            opt = self.options[self.selected]
+            if opt.action is not None:
+                return opt.action
+            if opt.is_trigger and opt.cheat_attr:
+                setattr(cheats, opt.cheat_attr, True)
                 return PauseAction.RESUME
-            return PauseAction.MAIN_MENU
+
+            if opt.cheat_attr:
+                current_val = getattr(cheats, opt.cheat_attr, False)
+                setattr(cheats, opt.cheat_attr, not current_val)
+                return None
         return None
 
-    def draw(self, canvas: Canvas) -> None:
+    def draw(self, canvas: Canvas, cheats: Cheats) -> None:
         """
         Draw the pause title and options on top of the game view.
 
         Args:
             canvas: Canvas to draw on.
         """
-        box_w, box_h = 260, 170
+        line_height = 36
+        box_w, box_h = 340, 90 + (len(self.options) + 1) * line_height
         box_x = (canvas.width - box_w) // 2
         box_y = (canvas.height - box_h) // 2
         canvas.draw_rect(box_x, box_y, box_w, box_h, (0, 0, 0))
@@ -119,8 +149,15 @@ class PauseMenu:
                          filled=False)
         canvas.draw_text("PAUSE", canvas.width // 2, box_y + 35,
                          TITLE_COLOR, size=48, centered=True)
-        for index, label in enumerate(PAUSE_OPTIONS):
+        for index, opt in enumerate(self.options):
             color = SELECTED_COLOR if index == self.selected else OPTION_COLOR
+            label: str = opt.label
+            if opt.cheat_attr and not opt.is_trigger:
+                state_val = getattr(cheats, opt.cheat_attr, False)
+                state_text = "[ON]" if state_val else "[OFF]"
+                label = f"{opt.label}  {state_text}"
+            else:
+                label = opt.label
             canvas.draw_text(label, canvas.width // 2,
                              box_y + 90 + index * 40, color,
                              size=32, centered=True)

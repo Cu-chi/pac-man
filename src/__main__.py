@@ -67,7 +67,8 @@ class App():
             if action == GamePhase.PAUSED:
                 self.screen = Screen.PAUSED
         elif self.screen == Screen.PAUSED:
-            action = self.pause.handle_key(event)
+            action = self.pause.handle_key(event,
+                                           self.game_controller.state.cheats)
             if action == PauseAction.RESUME:
                 self.screen = Screen.PLAYING
                 self.game_controller.resume()
@@ -105,7 +106,7 @@ class App():
                 self.end_screen.score = self.game_controller.state.player.score
                 self.screen = Screen.END
         elif self.screen == Screen.PAUSED:
-            self.pause.draw(self.canvas)
+            self.pause.draw(self.canvas, self.game_controller.state.cheats)
         elif self.screen == Screen.END:
             self.end_screen.draw(self.canvas)
 
