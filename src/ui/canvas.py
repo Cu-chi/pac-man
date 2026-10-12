@@ -3,6 +3,8 @@ import time
 from ui.events import Key, EventType, Event
 from types import TracebackType
 from typing import Self, Callable
+from constants import MIN_WINDOW, MAX_WINDOW
+
 
 Color = tuple[int, int, int]
 _KEY_MAP: dict[int, Key] = {
@@ -35,6 +37,13 @@ class Canvas:
             height: Window height, in pixels.
             title: Text shown in the window's title bar.
         """
+        if not (MIN_WINDOW[0] <= width <= MAX_WINDOW[0] and
+                MIN_WINDOW[1] <= height <= MAX_WINDOW[1]):
+            raise ValueError(
+                f"window size {width} x {height} is not valid "
+                f"({MIN_WINDOW[0]}x{MIN_WINDOW[1]} to "
+                f"{MAX_WINDOW[0]}x{MAX_WINDOW[1]})"
+            )
         self.width: int = width
         self.height: int = height
 

@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from ui.events import Event, EventType, Key
 from models import GameState
+from constants import HUD_HEIGHT
 
-HUD_HEIGHT = 30
 HUD_COLOR: Color = (255, 255, 255)
 TITLE_COLOR: Color = (255, 205, 155)
 OPTION_COLOR: Color = (255, 255, 224)
