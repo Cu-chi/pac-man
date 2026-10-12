@@ -217,7 +217,7 @@ class GameController:
             if ghost.position == player_pos or swapped:
                 if ghost.state == GhostState.SCARED:
                     ghost.state = GhostState.EATEN
-                    ghost.respawn_timer += self._config.ghost_respawn_timer
+                    ghost.respawn_timer = self._config.ghost_respawn_timer
                     self.state.player.score += self._config.points_per_ghost
                 elif ghost.state == GhostState.CHASE:
                     if self.state.cheats.invincible:
@@ -235,6 +235,7 @@ class GameController:
         self.state.player.direction = Direction.RIGHT
         self.state.player.next_direction = None
         for ghost in self.state.ghosts:
+            ghost.respawn_timer = 0.0
             ghost.position = ghost.spawn
             ghost.state = GhostState.CHASE
 
