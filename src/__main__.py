@@ -66,6 +66,24 @@ class App():
         top = ranked[:MAX_HIGHSCORE]
         self.menu.highscore = [(s.username, s.score) for s in top]
 
+    def _save_score(self, name: str, score: int) -> None:
+        """Add a score, keep the best ones and write them to disk.
+
+        Args:
+            name (str): Player name, validated by the end screen.
+            score (int): Final score of the game.
+        """
+        self.highscores.score.append(Score(username=name, score=score))
+        self.highscores.score = sorted(self.highscores.score,
+                                       key=lambda s: s.score,
+                                       reverse=True)[:MAX_HIGHSCORE]
+        self._refresh_highscores()
+        try:
+            self.highscores.save_json(Path(self.config.highscore_filename))
+        except OSError as e:
+            print(f"Warning: could not save highscores: {e}",
+                  file=sys.stderr)
+
     def _create_game(self) -> GameController:
         """Generate fresh levels and create a new game controller.
 
@@ -101,16 +119,10 @@ class App():
             elif pause_action == PauseAction.MAIN_MENU:
                 self.screen = Screen.MENU
         elif self.screen == Screen.END:
-            if self.end_screen.handle_key(event) is not None:
-                self.highscores.score.append(
-                    Score(
-                        username=self.end_screen.name,
-                        score=self.end_screen.score
-                    )
-                )
+            name = self.end_screen.handle_key(event)
+            if name is not None:
+                self._save_score(name, self.end_screen.score)
                 self.end_screen.name = ""
-                self._refresh_highscores()
-                self.highscores.save_json(Path(self.config.highscore_filename))
                 self.screen = Screen.MENU
 
     def on_frame(self, dt: float) -> None:

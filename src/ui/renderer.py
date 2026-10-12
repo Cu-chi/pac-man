@@ -2,8 +2,11 @@
 
 from models import (Level, Direction, PlayerData, GhostData, GhostState,
                     GameState)
+from pathlib import Path
 from ui.canvas import Canvas, Color
 from constants import HUD_HEIGHT
+
+ASSETS_DIR = Path(__file__).parent / "assets"
 
 
 class Renderer:
@@ -177,8 +180,8 @@ class Renderer:
         """
         x, y = player.position
         state = "open" if (x + y) % 2 == 0 else "closed"
-        path = (f"src/ui/assets/pacman_{state}"
-                f"_{player.direction.name.lower()}.png")
+        path = str(ASSETS_DIR / f"pacman_{state}"
+                   f"_{player.direction.name.lower()}.png")
         self._draw_sprite(path, x, y)
 
     def _draw_ghosts(self, ghosts: list[GhostData]) -> None:
@@ -199,7 +202,7 @@ class Renderer:
                 variant = "eaten"
             else:
                 variant = ghost.color
-            path = (f"src/ui/assets/ghost_{variant}"
-                    f"_{ghost.direction.name.lower()}.png")
+            path = str(ASSETS_DIR / f"ghost_{variant}"
+                       f"_{ghost.direction.name.lower()}.png")
             x, y = ghost.position
             self._draw_sprite(path, x, y)

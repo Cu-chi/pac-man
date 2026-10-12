@@ -13,7 +13,7 @@ class Score(BaseModel):
 
     @model_validator(mode="after")
     def check_username(self) -> Self:
-        """Ensure the username is alphanumeric.
+        """Ensure the username only has alphanumeric characters and spaces.
 
         Raises:
             ValueError: If the username contains other characters.
@@ -21,8 +21,8 @@ class Score(BaseModel):
         Returns:
             Self: The validated score.
         """
-        if not self.username.isalnum():
-            raise ValueError("username is not alpha-numerical")
+        if not self.username.replace(" ", "").isalnum():
+            raise ValueError("username must be alphanumeric or spaces")
         return self
 
 
