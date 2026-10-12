@@ -46,7 +46,7 @@ class App():
         self.config = config
         try:
             highscores = Highscores.load_json(Path(config.highscore_filename))
-        except (ValidationError, OSError) as e:
+        except (ValidationError, OSError, ValueError) as e:
             print(f"Warning: {e}", file=sys.stderr)
             highscores = Highscores()
         self.highscores = highscores
@@ -171,7 +171,6 @@ def main() -> None:
 
         window_w = max(MIN_WINDOW[0], maze_w * tile)
         window_h = max(MIN_WINDOW[1], maze_h * tile + HUD_HEIGHT)
-
         with Canvas(window_w, window_h, "PAC-MAN") as canvas:
             app = App(canvas, config, tile_size=tile)
             canvas.key_hook(app.on_key)
