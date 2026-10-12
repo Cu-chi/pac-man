@@ -4,7 +4,7 @@ from models import (
     GameState, GamePhase,
     GhostState, Direction,
     GameEvent, PlayerData, GhostData,
-    Configuration)
+    Configuration, Cheats)
 from controllers.player_controller import PlayerController
 from ui.events import Event, EventType, Key
 from controllers.ghost_controller import GhostController
@@ -35,7 +35,8 @@ class GameController:
         self._init_controllers()
 
     def _create_game_state(self, index: int,
-                           old_player_data: PlayerData | None = None) \
+                           old_player_data: PlayerData | None = None,
+                           old_cheats: Cheats | None = None) \
             -> GameState:
         """Create the state of a level, keeping the previous player stats.
 
@@ -79,7 +80,8 @@ class GameController:
             level_index=index,
             total_levels=self._total_levels,
             time_left=self._config.level_max_time,
-            phase=GamePhase.PLAYING
+            phase=GamePhase.PLAYING,
+            cheats=old_cheats if old_cheats else Cheats()
         )
 
     def _init_controllers(self) -> None:
@@ -244,7 +246,8 @@ class GameController:
 
         self._level_index += 1
         self.state = self._create_game_state(
-            self._level_index, old_player_data=self.state.player
+            self._level_index, old_player_data=self.state.player,
+            old_cheats=self.state.cheats
         )
         self._init_controllers()
         self.state.events.append(GameEvent.LEVEL_WON)
