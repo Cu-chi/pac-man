@@ -3,6 +3,7 @@
 from pydantic import BaseModel, Field, model_validator
 from pathlib import Path
 from typing import Self
+import json
 
 
 class Score(BaseModel):
@@ -52,4 +53,14 @@ class Highscores(BaseModel):
         file_path = Path(path)
         if not file_path.exists():
             return cls()
-        return cls.model_validate_json(file_path.read_text(encoding="utf-8"))
+
+        highscores = json.loads(file_path.read_text(encoding="utf-8"))
+        validated_scores = []
+        if isinstance(highscores, dict):
+            scores = highscores.get("score", [])
+            for score in scores:
+                try:
+                    validated_scores.append(Score.model_validate(score))
+                except Exception:
+                    pass
+        return Highscores(score=validated_scores)
