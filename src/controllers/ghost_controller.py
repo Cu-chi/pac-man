@@ -3,7 +3,6 @@
 from controllers.base_controller import BaseEntityController
 from models import GhostData, Level, Direction, PlayerData, GhostState
 from collections import deque
-import random
 
 
 OPP_DIR: dict[Direction, Direction] = {
@@ -67,9 +66,6 @@ class GhostController(BaseEntityController[GhostData]):
         opposite_dir = OPP_DIR[self._entity.direction]
         valids = [d for d in reachables if d != opposite_dir] or reachables
 
-        if self._entity.state == GhostState.SCARED:
-            return random.choice(valids)
-
         start = self._entity.position
         target = self._get_target()
 
@@ -115,5 +111,12 @@ class GhostController(BaseEntityController[GhostData]):
         """
         if self._entity.state == GhostState.EATEN:
             return self._entity.spawn
+        elif self._entity.state == GhostState.SCARED:
+            px, py = self._player_data.position
+            max_x, max_y = self._level.width - 1, self._level.height - 1
+            return (
+                max_x - px,
+                max_y - py
+            )
 
         return self._player_data.position
