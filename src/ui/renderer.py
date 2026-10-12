@@ -1,7 +1,7 @@
 from models import (Level, Direction, PlayerData, GhostData, GhostState,
                     GameState)
 from ui.canvas import Canvas, Color
-from ui.screens import HUD_HEIGHT
+from constants import HUD_HEIGHT
 
 
 class Renderer:
