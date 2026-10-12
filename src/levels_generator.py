@@ -30,23 +30,20 @@ class LevelsGenerator:
                                                   maze.maze)
             pacgums = self.create_pacgums(level.width, level.height,
                                           maze.maze, player_spawn)
+            corners = {
+                (0, 0),
+                (level.width - 1, 0),
+                (level.width - 1, level.height - 1),
+                (0, level.height - 1),
+            }
+
             self.levels.append(Level(
                 width=level.width,
                 height=level.height,
                 walls=maze.maze,
-                pacgums=pacgums,
-                super_pacgums={
-                    (0, 0),
-                    (level.width - 1, 0),
-                    (level.width - 1, level.height - 1),
-                    (0, level.height - 1),
-                },
-                ghost_spawns=[
-                    (0, 0),
-                    (level.width - 1, 0),
-                    (level.width - 1, level.height - 1),
-                    (0, level.height - 1),
-                ],
+                pacgums=pacgums.difference(corners),
+                super_pacgums=corners,
+                ghost_spawns=list(corners),
                 player_spawn=player_spawn,
             ))
 
