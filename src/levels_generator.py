@@ -77,7 +77,7 @@ class LevelsGenerator:
                 if maze[y][x] != 15:
                     return (x, y)
 
-        raise SpawnNotFoundException()
+        raise SpawnNotFoundException("no valid player spawn found")
 
     @staticmethod
     def create_pacgums(width: int, height: int,
