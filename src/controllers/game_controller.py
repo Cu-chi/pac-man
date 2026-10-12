@@ -111,13 +111,16 @@ class GameController:
 
         self._update_timers(dt)
 
+        old_player_pos = self.state.player.position
+        old_ghosts_pos = [ghost.position for ghost in self.state.ghosts]
+
         self._player_controller.set_noclip(self.state.cheats.noclip)
         self._player_controller.update(dt)
         for g_ctrl in self._ghosts_controllers:
             g_ctrl.update(dt, self.state.cheats.ghosts_freeze)
 
         self._check_pacgums()
-        self._check_ghost_collisions()
+        self._check_ghost_collisions(old_player_pos, old_ghosts_pos)
         self._check_game_status()
 
     def resume(self) -> None:
@@ -189,12 +192,27 @@ class GameController:
                 if ghost.state == GhostState.CHASE:
                     ghost.state = GhostState.SCARED
 
-    def _check_ghost_collisions(self) -> None:
-        """Centralized collision check between player and ghosts."""
+    def _check_ghost_collisions(
+        self,
+        old_player_pos: tuple[int, int],
+        old_ghosts_pos: list[tuple[int, int]]
+    ) -> None:
+        """Centralized collision check between player and ghosts.
+
+        A ghost touches the player when they end on the same tile, or when
+        they swapped tiles during the frame (crossed each other).
+
+        Args:
+            old_player_pos (tuple[int, int]): Player position before moving.
+            old_ghosts_pos (list[tuple[int, int]]): Ghosts positions before
+                moving, in the same order as the ghosts.
+        """
         player_pos = self.state.player.position
 
-        for ghost in self.state.ghosts:
-            if ghost.position == player_pos:
+        for ghost, old_ghost_pos in zip(self.state.ghosts, old_ghosts_pos):
+            swapped = (ghost.position == old_player_pos
+                       and player_pos == old_ghost_pos)
+            if ghost.position == player_pos or swapped:
                 if ghost.state == GhostState.SCARED:
                     ghost.state = GhostState.EATEN
                     ghost.respawn_timer += self._config.ghost_respawn_timer
