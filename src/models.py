@@ -10,18 +10,77 @@ from pydantic.fields import FieldInfo
 from constants import MAX_MAZE_WIDTH, MAX_MAZE_HEIGHT
 
 
-class LevelConfig(BaseModel):
+class ClampedModel(BaseModel):
+    """Base model clamping out-of-range values, or using the default."""
+
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def clamp_or_default_on_error(cls, value: Any,
+                                  handler: ValidatorFunctionWrapHandler,
+                                  info: ValidationInfo) -> Any:
+        """Validate a field, clamping it or falling back to its default.
+
+        Out-of-range values are clamped to the broken ge/le bound, other
+        invalid values fall back to the field default.
+
+        Args:
+            value (Any): Raw value of the field.
+            handler (ValidatorFunctionWrapHandler): Standard validator.
+            info (ValidationInfo): Information about the field.
+
+        Raises:
+            ValidationError: If the value is invalid and has no default.
+
+        Returns:
+            Any: The validated value, the bound, or the default one.
+        """
+        try:
+            return handler(value)
+        except ValidationError as exc:
+            field_name = info.field_name
+            field_info: FieldInfo | None = None
+            if field_name is not None:
+                field_info = cls.model_fields.get(field_name)
+
+            # if no default value, raise exception
+            if field_info is None or field_info.is_required():
+                raise exc
+
+            error = exc.errors()[0]
+            if error["type"] == "less_than_equal":
+                bound = error["ctx"]["le"]
+            elif error["type"] == "greater_than_equal":
+                bound = error["ctx"]["ge"]
+            else:
+                bound = None
+
+            if bound is not None:
+                print(f"Invalid value for '{field_name}':"
+                      f" {error['msg']}, clamping to '{bound}'",
+                      file=sys.stderr)
+                return bound
+
+            default_val = field_info.get_default(call_default_factory=True)
+
+            print(f"Invalid value for '{field_name}':"
+                  f" {error['msg']}, setting default value"
+                  f" '{default_val}'", file=sys.stderr)
+            return default_val
+
+
+class LevelConfig(ClampedModel):
     """Size of a single level, in tiles."""
 
     width: int = Field(default=10, ge=5, le=MAX_MAZE_WIDTH)
     height: int = Field(default=10, ge=5, le=MAX_MAZE_HEIGHT)
 
 
-class Configuration(BaseModel):
+class Configuration(ClampedModel):
     """Game configuration loaded from the JSON file.
 
-    Invalid values fall back to their default with a warning, missing keys
-    are reported and unknown keys are ignored.
+    Out-of-range values are clamped to their bound and other invalid values
+    fall back to their default with a warning, missing keys are reported and
+    unknown keys are ignored.
     """
 
     highscore_filename: str = "highscores.json"
@@ -83,43 +142,6 @@ class Configuration(BaseModel):
             while len(self.levels) < 10:
                 self.levels.append(LevelConfig())
         return self
-
-    @field_validator("*", mode="wrap")
-    @classmethod
-    def fallback_to_default_on_error(cls, value: Any,
-                                     handler: ValidatorFunctionWrapHandler,
-                                     info: ValidationInfo) -> Any:
-        """Validate a field, falling back to its default when invalid.
-
-        Args:
-            value (Any): Raw value of the field.
-            handler (ValidatorFunctionWrapHandler): Standard validator.
-            info (ValidationInfo): Information about the field.
-
-        Raises:
-            ValidationError: If the value is invalid and has no default.
-
-        Returns:
-            Any: The validated value, or the default one.
-        """
-        try:
-            return handler(value)
-        except ValidationError as exc:
-            field_name = info.field_name
-            field_info: FieldInfo | None = None
-            if field_name is not None:
-                field_info = cls.model_fields.get(field_name)
-
-            # if no default value, raise exception
-            if field_info is None or field_info.is_required():
-                raise exc
-
-            default_val = field_info.get_default(call_default_factory=True)
-
-            print(f"Invalid value for '{field_name}':"
-                  f" {exc.errors()[0]['msg']}, setting default value"
-                  f" '{default_val}'", file=sys.stderr)
-            return default_val
 
 
 class Direction(Enum):
