@@ -1,5 +1,5 @@
 PYTHON = python3
-SRC = src
+MAIN = pac-man.py
 MYPY_FLAGS = --warn-return-any --warn-unused-ignores --ignore-missing-imports \
 --disallow-untyped-defs --check-untyped-defs
 VENV = .venv
@@ -9,10 +9,10 @@ install:
 	uv sync
 
 run:
-	uv run $(PYTHON) $(SRC) $(CONFIG)
+	uv run $(PYTHON) $(MAIN) $(CONFIG)
 
 debug:
-	uv run $(PYTHON) -m pdb $(SRC) $(CONFIG)
+	uv run $(PYTHON) -m pdb $(MAIN) $(CONFIG)
 
 clean:
 	@rm -rf $$(find . -type d -name "__pycache__") $$(find . -type d -name ".mypy_cache")
