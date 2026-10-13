@@ -1,5 +1,6 @@
 """Entry point of the Pac-Man game: parses arguments and runs the app."""
 
+import os
 import sys
 from ui.menu import MAX_HIGHSCORE
 from models import Configuration, GamePhase
@@ -168,11 +169,16 @@ class App():
 
 def main() -> None:
     """Load the configuration given on the command line and run the game."""
-    if len(sys.argv) != 2:
+    args = sys.argv[1:]
+    if not args and getattr(sys, "frozen", False):
+        # Packaged build: config.json and highscores live next to the binary
+        os.chdir(Path(sys.executable).parent)
+        args = ["config.json"]
+    if len(args) != 1:
         print("Error: no configuration file given.", file=sys.stderr)
         sys.exit(1)
     try:
-        config = ConfigLoader(sys.argv[1]).load()
+        config = ConfigLoader(args[0]).load()
 
         maze_w = config.width
         maze_h = config.height

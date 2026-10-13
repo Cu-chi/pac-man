@@ -1,0 +1,40 @@
+PAC-MAN
+=======
+
+LAUNCH
+  Windows : double-click pac-man.exe
+  Linux   : ./pac-man
+  macOS   : ./pac-man   (first time: right-click > Open, the build is unsigned)
+
+  You can also pass another configuration file:  ./pac-man my_config.json
+
+CONTROLS
+  Arrow keys     Move Pac-Man / navigate menus
+  Enter          Confirm
+  Escape         Pause / resume (main menu: quit)
+  Space          Next level, once a level is completed
+  Backspace      Erase a letter when typing your name
+
+CHEATS
+  Pause the game (Escape): Invincible, Freeze Ghosts, Noclip, Skip Level.
+
+CONFIGURATION
+  Edit config.json (next to the executable). Lines starting with # are
+  comments. Out-of-range values are clamped to their min/max.
+
+    highscore_filename        File where highscores are saved
+    lives                     Number of lives
+    level_max_time            Time limit per level, in seconds
+    seed                      Maze generation seed
+    player_speed              Pac-Man speed, in tiles per second
+    ghost_speed               Ghost speed, in tiles per second
+    ghost_scared_multiplier   Ghost speed factor while scared
+    ghost_scared_timer        Duration of the scared mode, in seconds
+    ghost_respawn_timer       Time before an eaten ghost comes back, in seconds
+    points_per_pacgum         Points for a pacgum
+    points_per_super_pacgum   Points for a super pacgum
+    points_per_ghost          Points for an eaten ghost
+    width / height            Maze size, in tiles
+
+HIGHSCORES
+  Saved in highscores.json, next to the executable.
