@@ -84,6 +84,7 @@ Here is a configuration file showing comments, custom scoring, and tailored leve
 ```
 
 ## Highscore
+The highscore system displays and keeps only the 10 higher scores. We implemented this way because it's not useful to keep lower scores as it takes space.
 
 ## Maze Generation
 
