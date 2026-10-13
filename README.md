@@ -47,15 +47,8 @@ object-oriented programming, a simple graphical library, and a modular, reusable
 
 ---
 
-### Level Customization (`levels`)
-
-The `levels` key accepts a list of levels. Each level defines the maze grid dimensions:
-
-| Setting | Type | Default | Allowed Range | Description |
-| :--- | :---: | :---: | :---: | :--- |
-| `width` | Whole number | `21` | At least `5` | Number of horizontal tiles in the maze. |
-| `height` | Whole number | `21` | At least `5` | Number of vertical tiles in the maze. |
-
+### Level Customization
+You can set `width`and `height`
 > **Note**: For optimal gameplay and visual balance, odd numbers (e.g., 15, 19, 21) are recommended for both width and height.
 
 ---
@@ -84,13 +77,9 @@ Here is a configuration file showing comments, custom scoring, and tailored leve
     "points_per_super_pacgum": 50,
     "points_per_ghost": 200,
 
-    # Level progression (at least 10 levels will be loaded)
-    "levels": [
-        { "width": 15, "height": 15 },
-        { "width": 17, "height": 17 },
-        { "width": 19, "height": 19 },
-        { "width": 21, "height": 21 }
-    ]
+    # Level size
+    "height": 21,
+    "width": 21
 }
 ```
 
