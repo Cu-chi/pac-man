@@ -58,6 +58,8 @@ class Highscores(BaseModel):
         validated_scores = []
         if isinstance(highscores, dict):
             scores = highscores.get("score", [])
+            if not isinstance(scores, list):
+                raise ValueError(f"'{file_path}': 'score' must be a list")
             for score in scores:
                 try:
                     validated_scores.append(Score.model_validate(score))
