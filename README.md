@@ -356,4 +356,6 @@ https://pyinstaller.org/en/stable/spec-files.html
 https://itch.io/docs/butler/  
 
 AI usage:
-* **README**: AI helped us write and structure some sections of this README (Instructions, Implementation, General Software Architecture), and take the screenshots by running the game. We checked every part against our code.
+* **CODE**: It helped us understand some concepts and libraries (pydantic validators, pygame, PyInstaller), find the cause of some bugs, and review parts of our code. Every suggestion was checked, tested and rewritten by us when needed, so we can explain all the code of the project.
+
+* **README**: AI helped us write and structure some sections of this README (Instructions, Implementation, General Software Architecture). We checked every part against our code.
