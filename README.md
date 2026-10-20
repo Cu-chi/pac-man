@@ -338,10 +338,11 @@ classDiagram
 ## Project Management
 
 We used the github project feature linked to our repository. It checks our opened issues and create an item for each one then it automatically set it to done when the issue is closed. [Link to our project](https://github.com/users/Cu-chi/projects/1)
-![project management screenshot](./.github/assets/image.png)
 
 Therefore, the ['issues' section](https://github.com/Cu-chi/pac-man/issues) of our github repository was central.  
 We opened an issue for each feature or bug then we were attributed to specific and we worked on our side without conflicts.
+
+[Link to the Project Management Directory with screenshots](./project_management)
 
 ## Resources
 https://pydantic.dev/docs/validation/dev/concepts/validators/  
