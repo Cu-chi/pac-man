@@ -174,7 +174,7 @@ def main() -> None:
         # Packaged build: config.json and highscores live next to the binary
         os.chdir(Path(sys.executable).parent)
         args = ["config.json"]
-    if len(args) != 1:
+    if len(args) < 1:
         print("Error: no configuration file given.", file=sys.stderr)
         sys.exit(1)
     try:
