@@ -86,16 +86,16 @@ class Configuration(ClampedModel):
     highscore_filename: str = "highscores.json"
     height: int = Field(default=10, ge=5, le=MAX_MAZE_HEIGHT)
     width: int = Field(default=10, ge=5, le=MAX_MAZE_WIDTH)
-    lives: int = Field(default=3, ge=1)
-    points_per_pacgum: int = Field(default=10, ge=0)
-    points_per_super_pacgum: int = Field(default=50, ge=0)
-    points_per_ghost: int = Field(default=200, ge=0)
+    lives: int = Field(default=3, ge=1, le=100)
+    points_per_pacgum: int = Field(default=10, ge=0, le=100000)
+    points_per_super_pacgum: int = Field(default=50, ge=0, le=100000)
+    points_per_ghost: int = Field(default=200, ge=0, le=100000)
     seed: int = Field(default=42, gt=0)
-    level_max_time: int = Field(default=300, gt=0)
+    level_max_time: int = Field(default=300, gt=0, le=36000)
     player_speed: float = Field(default=6.0, ge=1.0, le=15.0)
     ghost_speed: float = Field(default=5.0, ge=1.0, le=15.0)
-    ghost_scared_timer: float = Field(default=10.0, ge=3.0)
-    ghost_respawn_timer: float = Field(default=10.0, ge=3.0)
+    ghost_scared_timer: float = Field(default=10.0, ge=3.0, le=60.0)
+    ghost_respawn_timer: float = Field(default=10.0, ge=3.0, le=120.0)
     ghost_scared_multiplier: float = Field(default=0.75, ge=0.0, le=2.0)
 
     @property
