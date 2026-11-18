@@ -47,8 +47,9 @@ class App():
         self.config = config
         try:
             highscores = Highscores.load_json(Path(config.highscore_filename))
-        except (ValidationError, OSError, ValueError) as e:
-            print(f"Warning: {e}", file=sys.stderr)
+        except (ValidationError, OSError, ValueError, RecursionError) as e:
+            print(f"Warning: could not load highscores: {e}",
+                  file=sys.stderr)
             highscores = Highscores()
         self.highscores = highscores
         self.tile_size = tile_size
@@ -81,7 +82,7 @@ class App():
         self._refresh_highscores()
         try:
             self.highscores.save_json(Path(self.config.highscore_filename))
-        except OSError as e:
+        except (OSError, ValueError) as e:
             print(f"Warning: could not save highscores: {e}",
                   file=sys.stderr)
 
@@ -174,8 +175,12 @@ def main() -> None:
         # Packaged build: config.json and highscores live next to the binary
         os.chdir(Path(sys.executable).parent)
         args = ["config.json"]
-    if len(args) < 1:
+    if not args:
         print("Error: no configuration file given.", file=sys.stderr)
+        sys.exit(1)
+    if len(args) > 1:
+        print(f"Error: expected exactly one configuration file, "
+              f"got {len(args)} arguments.", file=sys.stderr)
         sys.exit(1)
     try:
         config = ConfigLoader(args[0]).load()
