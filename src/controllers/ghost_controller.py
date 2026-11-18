@@ -44,7 +44,7 @@ class GhostController(BaseEntityController[GhostData]):
             case GhostState.SCARED:
                 self.speed = self._base_speed * self._scared_speed_multiplier
             case GhostState.EATEN:
-                self.speed = self._base_speed * 1.5  # +50% speed to back
+                self.speed = self._level.width  # cell/s = width so it's fast
             case GhostState.CHASE:
                 self.speed = self._base_speed
 
