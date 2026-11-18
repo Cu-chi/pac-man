@@ -221,7 +221,7 @@ class GameController:
                     self.state.player.score += self._config.points_per_ghost
                 elif ghost.state == GhostState.CHASE:
                     if self.state.cheats.invincible:
-                        break
+                        continue
                     self.state.player.lives -= 1
                     if self.state.player.lives <= 0:
                         self.state.phase = GamePhase.GAME_OVER
