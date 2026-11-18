@@ -3,7 +3,7 @@
 import sys
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Any, Self
+from typing import Any
 from pydantic import BaseModel, Field, field_validator, ValidationInfo, \
     ValidationError, model_validator, ValidatorFunctionWrapHandler
 from pydantic.fields import FieldInfo
@@ -128,20 +128,6 @@ class Configuration(ClampedModel):
                     print(f"Missing key '{field_name}' in JSON. Setting "
                           f" default value {def_val}", file=sys.stderr)
         return data
-
-    @model_validator(mode="after")
-    def pad_levels(self) -> Self:
-        """Ensure the game has at least 10 levels.
-
-        Returns:
-            Self: The validated configuration.
-        """
-        if len(self.levels) < 10:
-            print(f"Warning: config has only {len(self.levels)} levels, "
-                  f"padding to 10 with defaults.", file=sys.stderr)
-            while len(self.levels) < 10:
-                self.levels.append(LevelConfig())
-        return self
 
 
 class Direction(Enum):
